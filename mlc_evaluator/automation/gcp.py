@@ -114,7 +114,6 @@ def configure_environment(hostname: str = None, name: str = None, force: bool = 
         else:
             # fmt: off
             cmd = f'grep "export {varname}=" ~/.bashrc > /dev/null || {add}'
-        logger.info(cmd)
         remote_command(cmd, instance)
     pass
 
