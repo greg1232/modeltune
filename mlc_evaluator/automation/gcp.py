@@ -26,7 +26,8 @@ class Instance:
     hostname: str
 
 
-def configure_instance(instance):
+def provision_instance():
+    # TODO
     pass
 
 
