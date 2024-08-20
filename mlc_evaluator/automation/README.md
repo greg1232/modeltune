@@ -39,6 +39,13 @@ export HF_USER=MLCommons-Association
 export VLLM_API_KEY=<the vllm server api key> # in Keeper
 ```
 
+## Tests
+
+Not a lot for now.
+
+```bash
+python -m pytest tests
+```
 
 ## Example Usage
 
@@ -66,12 +73,13 @@ python deploy_evaluator.py instance -n eval-runner-01-dev-vm
 python deploy_evaluator.py start -n eval-runner-01-dev-vm
 ```
 
-
 ### Turn my instance off
 
 ```bash
 python deploy_evaluator.py stop -n eval-runner-01-dev-vm
 ```
+
+There are more functions too.
 
 ## How It Works
 
