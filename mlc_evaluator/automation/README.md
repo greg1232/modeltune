@@ -9,8 +9,8 @@ python deploy_evaluator.py # this will show help
 
 * gcloud CLI
 * gcloud CLI active login `gcloud auth application-default login --no-launch-browser`
-* private ssh key to a machine in `~/.ssh/eval-runner-01-dev-admin`
-* Environment variables:
+* private ssh key to a machine in `~/.ssh/eval-runner-dev-admin`
+* Environment variables on *your machine*:
 
 
 ```bash
@@ -24,7 +24,21 @@ export CR_USER=<your username>
 # hugging face token
 export HF_TOKEN=<your token>
 export HF_USER=MLCommons-Association
+export VLLM_API_KEY=<the vllm server api key> # in Keeper
 ```
+
+* Environment variables on *the server*:
+
+```bash
+# github container registry token
+export CR_PAT=<your token>
+export CR_USER=<your username>
+# hugging face token
+export HF_TOKEN=<your token>
+export HF_USER=MLCommons-Association
+export VLLM_API_KEY=<the vllm server api key> # in Keeper
+```
+
 
 ## Example Usage
 
@@ -64,3 +78,7 @@ python deploy_evaluator.py stop -n eval-runner-01-dev-vm
 The [deploy_evaluator.py](./deploy_evaluator.py) program issues commands via the GCP
 SDK (e.g. when listing instances) or via ssh to the instance itself, and displays
 stdout from the instance in that case.
+
+## Network and Other Bits
+
+* The instance needs the `vllm-8000` network tag to serve requests over :8000.

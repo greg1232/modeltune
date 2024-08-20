@@ -6,6 +6,7 @@ import logging
 import os
 
 import click
+from openai import OpenAI
 
 import gcp
 import mlcdocker
@@ -23,10 +24,37 @@ def cli():
 @click.option(
     "-h",
     "--hostname",
-    default=gcp.IP_ADDRESS,
-    help="Hostname or IP address of instance",
+    default=None,
+    help="Instance hostname or IP address, if known",
 )
-def echo(hostname: str = gcp.IP_ADDRESS):
+@click.option(
+    "-n",
+    "--name",
+    default=None,
+    help="Instance name, if known",
+)
+@click.option("-f", "--force", is_flag=True, default=False)
+def configure(hostname: str = None, name: str = None, force: bool = False) -> None:
+    """Normally you wouldn't need to use this once the machine has been configured.
+    But if you're running into issues with missing config variables, use this."""
+    gcp.configure_environment(hostname, name, force)
+
+
+@click.command()
+@click.option(
+    "-h",
+    "--hostname",
+    default=None,
+    help="Instance hostname or IP address, if known",
+)
+@click.option(
+    "-n",
+    "--name",
+    default=None,
+    help="Instance name, if known",
+)
+def echo(hostname: str = None, name: str = None):
+    hostname = gcp.find_ip_address(hostname, name)
     instance = gcp.Instance(hostname)
     response = gcp.remote_command("echo 1", instance)
     logger.info(str(response))
@@ -38,22 +66,22 @@ def echo(hostname: str = gcp.IP_ADDRESS):
 @click.option(
     "-h",
     "--hostname",
-    default=gcp.IP_ADDRESS,
+    default=None,
     help="Instance hostname or IP address, if known",
 )
 @click.option(
     "-n",
     "--name",
-    default=gcp.INSTANCE_NAME,
+    default=None,
     help="Instance name, if known",
 )
 def pull(
     image: str,
     tag: str = "latest",
-    hostname: str = gcp.IP_ADDRESS,
-    name: str = gcp.INSTANCE_NAME,
+    hostname: str = None,
+    name: str = None,
 ):
-    assert name or hostname
+    hostname = gcp.find_ip_address(hostname, name)
     login_cmd = mlcdocker.login_cmd(
         token=os.getenv("CR_PAT"), user=os.getenv("CR_USER")
     )
@@ -69,22 +97,22 @@ def pull(
 @click.option(
     "-h",
     "--hostname",
-    default=gcp.IP_ADDRESS,
+    default=None,
     help="Instance hostname or IP address, if known",
 )
 @click.option(
     "-n",
     "--name",
-    default=gcp.INSTANCE_NAME,
+    default=None,
     help="Instance name, if known",
 )
 def run(
     image: str,
     tag: str = "latest",
-    hostname: str = gcp.IP_ADDRESS,
-    name: str = gcp.INSTANCE_NAME,
+    hostname: str = None,
+    name: str = None,
 ):
-    assert name or hostname
+    hostname = gcp.find_ip_address(hostname, name)
     run_cmd = mlcdocker.run_cmd(image, tag)
     logger.info(run_cmd)
     instance = gcp.Instance(hostname)
@@ -113,7 +141,6 @@ def instances():
         print(f"Name: {instance['name']}")
         print(f"ID: {instance['id']}")
         print(f"Status: {instance['status']}")
-        print()
 
 
 @click.command()
@@ -129,11 +156,47 @@ def instance(name: str):
         print(f"IP: {ip}")
         print(f"ID: {the_instance['id']}")
         print(f"Status: {the_instance['status']}")
-        print()
     except Exception as exc:
         logger.error(f"Unable to find instance named {name}: {exc}.")
 
 
+@click.command()
+@click.option(
+    "-h",
+    "--hostname",
+    default=None,
+    help="Instance hostname or IP address, if known",
+)
+@click.option(
+    "-n",
+    "--name",
+    default=None,
+    help="Instance name, if known",
+)
+@click.option(
+    "-p",
+    "--prompt",
+    required=True,
+    help="Prompt",
+)
+def test(hostname: str, name: str, prompt: str):
+    hostname = gcp.find_ip_address(hostname, name)
+    base_url = f"http://{hostname}:8000/v1"
+    try:
+        client = OpenAI(
+            base_url=base_url,
+            api_key=os.getenv("VLLM_API_KEY", "fake key"),
+        )
+        completion = client.chat.completions.create(
+            model="mistralai/Mistral-7B-v0.1",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        print(completion.choices[0].message)
+    except Exception as exc:
+        logger.error(f"Error sending prompt: {exc}")
+
+
+cli.add_command(configure)
 cli.add_command(echo)
 cli.add_command(instance)
 cli.add_command(instances)
@@ -141,7 +204,7 @@ cli.add_command(pull)
 cli.add_command(run)
 cli.add_command(start)
 cli.add_command(stop)
-
+cli.add_command(test)
 
 if __name__ == "__main__":
     cli()

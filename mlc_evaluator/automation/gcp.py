@@ -12,17 +12,9 @@ import paramiko
 
 from vendor import google
 
-# TODO: use this tag on evaluator machines to look them up by tag
-# This may be useful if we ever have more than one machine
-EVALUATOR_RUNNER_TAG = {"mlc-machine-type": "evaluator"}
-
-IP_ADDRESS = "35.226.32.27"
-INSTANCE_NAME = "eval-runner-01-dev-vm"
-SSH_USER = "admin"
+SSH_USER = os.getenv("SSH_USER", "admin")
 SSH_KEY_FILENAME = str(
-    Path(os.getenv("HOME", os.path.expanduser("~")))
-    / ".ssh"
-    / "eval-runner-01-dev-admin"
+    Path(os.getenv("HOME", os.path.expanduser("~"))) / ".ssh" / "eval-runner-dev-admin"
 )
 
 logger = logging.getLogger("gcp")
@@ -35,14 +27,6 @@ class Instance:
 
 
 def configure_instance(instance):
-    pass
-
-
-def install_drivers(instance):
-    pass
-
-
-def set_config(instance, config: dict):
     pass
 
 
@@ -105,6 +89,34 @@ def stop_instance(name: str) -> None:
     except Exception as exc:
         logger.error(f"Unable to start instance named {name}: {exc}.")
         raise
+
+
+def find_ip_address(hostname: str = None, name: str = None) -> str:
+    """Convenience function to find an IP address when your function can receive
+    either an IP address or an instance name. This is to declutter client code."""
+    assert name or hostname, "Please provide a hostname/IP address or instance name."
+    if name:
+        hostname = get_ip_from_instance_name(name)
+    if not hostname:
+        raise RuntimeError(f"No IP address found.")
+    return hostname
+
+
+def configure_environment(hostname: str = None, name: str = None, force: bool = False):
+    ip = find_ip_address(hostname, name)
+    instance = Instance(ip)
+    for varname in ("CR_PAT", "CR_USER", "HF_TOKEN", "VLLM_API_KEY"):
+        # fmt: off
+        add = f'echo "export {varname}={os.getenv(varname, "")}" >> ~/.bashrc'
+        if force:
+            # fmt: off
+            cmd = f'sed -Ei "s/^export {varname}=.+$//g" .bashrc; {add}'
+        else:
+            # fmt: off
+            cmd = f'grep "export {varname}=" ~/.bashrc > /dev/null || {add}'
+        logger.info(cmd)
+        remote_command(cmd, instance)
+    pass
 
 
 def remote_command(

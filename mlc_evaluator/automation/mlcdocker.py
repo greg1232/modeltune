@@ -38,3 +38,14 @@ def run_cmd(image:str, tag: str) -> str:
         "--dtype=half"
     )
     return " ".join(parts)
+
+
+    # default vllm
+    # docker run --runtime nvidia --gpus all \
+    # -v ~/.cache/huggingface:/root/.cache/huggingface \
+    # --env "HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}" \
+    # -p 8000:8000 \
+    # --ipc=host \
+    # vllm/vllm-openai:latest \
+    # --model mistralai/Mistral-7B-v0.1 \
+    # --dtype=half
