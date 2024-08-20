@@ -23,29 +23,33 @@ def pull_cmd(image: str, tag: str) -> str:
     return f"docker pull {image_uri(image=image, tag=tag)}"
 
 
-def run_cmd(image:str, tag: str) -> str:
+def run_cmd(image: str, tag: str) -> str:
+    # Ryan's vllm
+    # parts = (
+    #     "docker run",
+    #     "--runtime nvidia",
+    #     "--gpus all",
+    #     # fmt: off
+    #     '--env "HUGGING_FACE_HUB_TOKEN=' + os.getenv("HF_TOKEN") + '"',
+    #     # fmt: on
+    #     "-p 8000:8000",
+    #     "--ipc=host",
+    #     image_uri(image, tag),
+    #     f"--api_key={os.getenv("VLLM_API_KEY", "secret_key")}",
+    #     "--dtype=half"
+    # )
+
+    # default vllm
     parts = (
-        "docker run",
-        "--runtime nvidia",
-        "--gpus all",
+        "source /home/admin/.bashrc &&",
+        "docker run --runtime nvidia --gpus all",
+        "-v ~/.cache/huggingface:/root/.cache/huggingface",
         # fmt: off
-        '--env "HUGGING_FACE_HUB_TOKEN=' + os.getenv("HF_TOKEN") + '"',
-        # fmt: on
+        f'--env "HUGGING_FACE_HUB_TOKEN={os.getenv("HF_TOKEN", "")}"',
         "-p 8000:8000",
         "--ipc=host",
-        image_uri(image, tag),
-        f"--api_key={os.getenv("VLLM_API_KEY", "secret_key")}",
+        "vllm/vllm-openai:latest",
+        "--model mistralai/Mistral-7B-v0.1",
         "--dtype=half"
     )
     return " ".join(parts)
-
-
-    # default vllm
-    # docker run --runtime nvidia --gpus all \
-    # -v ~/.cache/huggingface:/root/.cache/huggingface \
-    # --env "HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}" \
-    # -p 8000:8000 \
-    # --ipc=host \
-    # vllm/vllm-openai:latest \
-    # --model mistralai/Mistral-7B-v0.1 \
-    # --dtype=half
