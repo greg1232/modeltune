@@ -35,8 +35,7 @@ def cli():
 )
 @click.option("-f", "--force", is_flag=True, default=False)
 def configure(hostname: str = None, name: str = None, force: bool = False) -> None:
-    """Normally you wouldn't need to use this once the machine has been configured.
-    But if you're running into issues with missing config variables, use this."""
+    """Configures environment variables on a remote instance. Only needed once."""
     gcp.configure_environment(hostname, name, force)
 
 
@@ -54,6 +53,7 @@ def configure(hostname: str = None, name: str = None, force: bool = False) -> No
     help="Instance name, if known",
 )
 def echo(hostname: str = None, name: str = None):
+    """Runs a simple echo command on a remote instance for testing."""
     hostname = gcp.find_ip_address(hostname, name)
     instance = gcp.Instance(hostname)
     response = gcp.remote_command("echo 1", instance)
@@ -81,6 +81,7 @@ def pull(
     hostname: str = None,
     name: str = None,
 ):
+    """Pulls the specified image and tag on the remote instance."""
     hostname = gcp.find_ip_address(hostname, name)
     login_cmd = mlcdocker.login_cmd(
         token=os.getenv("CR_PAT"), user=os.getenv("CR_USER")
@@ -112,6 +113,7 @@ def run(
     hostname: str = None,
     name: str = None,
 ):
+    """Runs the specified image on the remote instance."""
     hostname = gcp.find_ip_address(hostname, name)
     run_cmd = mlcdocker.run_cmd(image, tag)
     logger.info(run_cmd)
@@ -136,6 +138,7 @@ def stop(name: str):
 
 @click.command()
 def instances():
+    """Displays a list of all the instances in the default zone."""
     instances = gcp.list_instances()
     for instance in instances:
         print(f"Name: {instance['name']}")
@@ -147,6 +150,7 @@ def instances():
 @click.command()
 @click.option("-n", "--name", required=True, help="Instance name")
 def instance(name: str):
+    """Displays basic information about the specified instance."""
     instances = gcp.list_instances()
     try:
         # TODO: pull the IP from the Instance object we already have
@@ -181,6 +185,7 @@ def instance(name: str):
     help="Prompt",
 )
 def test(hostname: str, name: str, prompt: str):
+    """Sends a test prompt to the vllm server."""
     hostname = gcp.find_ip_address(hostname, name)
     base_url = f"http://{hostname}:8000/v1"
     try:
