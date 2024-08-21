@@ -116,7 +116,7 @@ def run(
     """Runs the specified image on the remote instance."""
     hostname = gcp.find_ip_address(hostname, name)
     run_cmd = mlcdocker.run_cmd(image, tag)
-    logger.info(run_cmd)
+    logger.debug(run_cmd)
     instance = gcp.Instance(hostname)
     response = gcp.remote_command(run_cmd, instance)
     logger.info(str(response))
@@ -225,7 +225,7 @@ def what_is_running(hostname: str, name: str):
     """What Docker is running on the remote instance, if anything."""
     hostname = gcp.find_ip_address(hostname, name)
     cmd = mlcdocker.what_is_running_cmd()
-    logger.info(cmd)
+    logger.debug(cmd)
     instance = gcp.Instance(hostname)
     response = gcp.remote_command(cmd, instance)
     logger.info(str(response))
