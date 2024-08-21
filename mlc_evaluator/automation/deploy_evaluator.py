@@ -140,6 +140,7 @@ def instances():
     for instance in instances:
         print(f"Name: {instance['name']}")
         print(f"ID: {instance['id']}")
+        print(f"IP Address: {instance['ip_address']}")
         print(f"Status: {instance['status']}")
 
 
@@ -151,10 +152,10 @@ def instance(name: str):
         # TODO: pull the IP from the Instance object we already have
         # rather than look it up
         the_instance = [i for i in instances if i["name"] == name][0]
-        ip = gcp.get_ip_from_instance_name(the_instance["name"])
+        ip_address = gcp.get_ip_from_instance_name(the_instance["name"])
         print(f"Name: {the_instance['name']}")
-        print(f"IP: {ip}")
         print(f"ID: {the_instance['id']}")
+        print(f"IP Address: {ip_address}")
         print(f"Status: {the_instance['status']}")
     except Exception as exc:
         logger.error(f"Unable to find instance named {name}: {exc}.")
@@ -196,6 +197,29 @@ def test(hostname: str, name: str, prompt: str):
         logger.error(f"Error sending prompt: {exc}")
 
 
+@click.command()
+@click.option(
+    "-h",
+    "--hostname",
+    default=None,
+    help="Instance hostname or IP address, if known",
+)
+@click.option(
+    "-n",
+    "--name",
+    default=None,
+    help="Instance name, if known",
+)
+def what_is_running(hostname: str, name: str):
+    """What Docker is running on the remote instance, if anything."""
+    hostname = gcp.find_ip_address(hostname, name)
+    cmd = mlcdocker.what_is_running_cmd()
+    logger.info(cmd)
+    instance = gcp.Instance(hostname)
+    response = gcp.remote_command(cmd, instance)
+    logger.info(str(response))
+
+
 cli.add_command(configure)
 cli.add_command(echo)
 cli.add_command(instance)
@@ -205,6 +229,8 @@ cli.add_command(run)
 cli.add_command(start)
 cli.add_command(stop)
 cli.add_command(test)
+cli.add_command(what_is_running)
+
 
 if __name__ == "__main__":
     cli()

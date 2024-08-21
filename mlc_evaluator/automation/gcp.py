@@ -41,8 +41,20 @@ def list_instances():
     try:
         zone_instances = instances.get(f"zones/{zone}", [])
         for instance in zone_instances:
+            ip_address = "unknown"
+            try:
+                ip_address = google.get_instance_ip_address(
+                    instance, google.IPType.EXTERNAL
+                )[0]
+            except:
+                ip_address = "unknown"
             instance_summary.append(
-                {"id": instance.id, "name": instance.name, "status": instance.status}
+                {
+                    "id": instance.id,
+                    "name": instance.name,
+                    "status": instance.status,
+                    "ip_address": ip_address,
+                }
             )
     except Exception as exc:
         logger.error(f"Unable to look up instances in zone {zone}: {exc}.")

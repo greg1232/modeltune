@@ -23,6 +23,10 @@ def pull_cmd(image: str, tag: str) -> str:
     return f"docker pull {image_uri(image=image, tag=tag)}"
 
 
+def what_is_running_cmd():
+    return "docker ps -a"
+
+
 def run_cmd(image: str, tag: str) -> str:
     # Ryan's vllm
     # parts = (
