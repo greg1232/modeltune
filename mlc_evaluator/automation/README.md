@@ -9,6 +9,7 @@ python deploy_evaluator.py # this will show help
 
 * gcloud CLI
 * gcloud CLI active login `gcloud auth application-default login --no-launch-browser`
+* a VM at GCP (details at bottom)
 * private ssh key to a machine in `~/.ssh/eval-runner-dev-admin`
 * Environment variables on *your machine*:
 
@@ -87,6 +88,17 @@ The [deploy_evaluator.py](./deploy_evaluator.py) program issues commands via the
 SDK (e.g. when listing instances) or via ssh to the instance itself, and displays
 stdout from the instance in that case.
 
-## Network and Other Bits
+## VM, Network and Other Bits
 
-* The instance needs the `vllm-8000` network tag to serve requests over :8000.
+* You need to provision an instance yourself and keep track of the zone.
+
+  * Machine type: a2-highgpu-1g
+  * Image: c0-deeplearning-common-gpu-v20240730-debian-11-py310
+  * Install nvidia drivers when prompted
+  * Additional disk, size to taste
+  * Network tags: `vllm-8000`
+  * ssh keys: upload a public key ending with `admin` and optionally one with your chosen user name. This will create the user accounts on the machine when it spins up.
+    * You will need the matching private key at `~/.ssh/eval-runner-dev-admin` on your machine
+      * You can change this in the `gcp.py` module if necessary
+
+* The vllm server will be listening on port 8000
