@@ -4,7 +4,7 @@ import os
 
 DEFAULT_NAMESPACE = "mlcommons"
 DEFAULT_REGISTRY = "ghcr.io"
-
+DEFAULT_MODEL = "llamaguard-lora"
 
 def image_uri(
     image: str,

@@ -184,7 +184,13 @@ def instance(name: str):
     required=True,
     help="Prompt",
 )
-def test(hostname: str, name: str, prompt: str):
+@click.option(
+    "-m",
+    "--model",
+    default=mlcdocker.DEFAULT_MODEL,
+    help="Prompt",
+)
+def test(hostname: str, name: str, prompt: str, model: str = mlcdocker.DEFAULT_MODEL):
     """Sends a test prompt to the vllm server."""
     hostname = gcp.find_ip_address(hostname, name)
     base_url = f"http://{hostname}:8000/v1"
@@ -194,7 +200,7 @@ def test(hostname: str, name: str, prompt: str):
             api_key=os.getenv("VLLM_API_KEY", "fake key"),
         )
         completion = client.chat.completions.create(
-            model="mistralai/Mistral-7B-v0.1",
+            model=model,
             messages=[{"role": "user", "content": prompt}],
         )
         print(completion.choices[0].message)
