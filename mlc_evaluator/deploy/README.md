@@ -72,3 +72,8 @@ curl localhost:8000/v1/models | jq .
 
 ## FAQs
 (coming soon?)
+
+## TODO
+
+* Ws3 should finalized the naming and versioning of the evaluator models. Let us have FIXME to decide that should the default model name be.
+*
