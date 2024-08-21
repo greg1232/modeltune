@@ -29,11 +29,11 @@ Not supported (yet)
    add details how to get that)
 1. Build the docker image, ensure the tag points at the MLC github package registry
 ```
-docker build -t ghcr.io/mlcommons/<NAME_OF_IMAGE> --build-arg ADAPTER_DIR=". /adapters" .
+docker build -t ghcr.io/mlcommons/ws3-model-test --build-arg ADAPTER_DIR=". /adapters" .
 ```
 1. Push the docker image to the MLC package registry
 ```
-docker push ghcr.io/mlcommons/<NAME_OF_IMAGE>:latest
+docker push ghcr.io/mlcommons/ws3-model-test:latest
 ```
 
 ## Step 2: Running the image
@@ -53,7 +53,7 @@ docker run \
     --env "HUGGING_FACE_HUB_TOKEN=<ADD_HF_TOKEN>" \
     -p 8000:8000 \
     --ipc=host \
-    ghcr.io/mlcommons/<NAME_OF_IMAGE>:latest \
+    ghcr.io/mlcommons/ws3-model-test:latest \
     --api-key="<YOUR_SUPER_SECURE_API_KEY>"
 ```
 
