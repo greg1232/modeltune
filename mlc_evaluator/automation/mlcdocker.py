@@ -28,7 +28,6 @@ def what_is_running_cmd():
 
 
 def run_cmd(image: str, tag: str) -> str:
-    # Ryan's vllm
     parts = (
         "docker run",
         "--runtime nvidia",
