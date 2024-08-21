@@ -42,18 +42,4 @@ def run_cmd(image: str, tag: str) -> str:
         f"--api_key={os.getenv("VLLM_API_KEY", "secret_key")}",
         "--dtype=half"
     )
-
-    # default vllm
-    # parts = (
-    #     "source /home/admin/.bashrc &&",
-    #     "docker run --runtime nvidia --gpus all",
-    #     "-v ~/.cache/huggingface:/root/.cache/huggingface",
-    #     # fmt: off
-    #     f'--env "HUGGING_FACE_HUB_TOKEN={os.getenv("HF_TOKEN", "")}"',
-    #     "-p 8000:8000",
-    #     "--ipc=host",
-    #     "vllm/vllm-openai:latest",
-    #     "--model mistralai/Mistral-7B-v0.1",
-    #     "--dtype=half"
-    # )
     return " ".join(parts)
