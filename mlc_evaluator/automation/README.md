@@ -50,10 +50,10 @@ python -m pytest tests
 
 ## Example Usage
 
-### Run the "evaluator" image on the "eval-runner-01-dev-vm" machine
+### Run the "evaluator" image on the "eval-runner-03-dev-vm" machine
 
 ```bash
-python deploy_evaluator.py run -n eval-runner-01-dev-vm -i evaluator
+python deploy_evaluator.py run -n eval-runner-03-dev-vm -i evaluator
 ```
 
 ### What instances do I have?
@@ -65,19 +65,19 @@ python deploy_evaluator.py instances
 ### What is the IP address of my instance?
 
 ```bash
-python deploy_evaluator.py instance -n eval-runner-01-dev-vm
+python deploy_evaluator.py instance -n eval-runner-03-dev-vm
 ```
 
 ### Turn my instance on
 
 ```bash
-python deploy_evaluator.py start -n eval-runner-01-dev-vm
+python deploy_evaluator.py start -n eval-runner-03-dev-vm
 ```
 
 ### Turn my instance off
 
 ```bash
-python deploy_evaluator.py stop -n eval-runner-01-dev-vm
+python deploy_evaluator.py stop -n eval-runner-03-dev-vm
 ```
 
 There are more functions too.
@@ -102,3 +102,20 @@ stdout from the instance in that case.
       * You can change this in the `gcp.py` module if necessary
 
 * The vllm server will be listening on port 8000
+
+## Troubleshooting
+
+* If the instance is brand new, and the `run` or `pull` commands fail, try running `python deploy_evaluator.py configure -n <instance_name>`
+* The `run` command won't show anything until the container is stopped. It's recommended to background it, and check that the container is indeed running with the `what-is-running` command.
+
+```bash
+python deploy_evaluator.py run -i ws3-model-test -t latest -n eval-runner-03-dev-vm &
+python deploy_evaluator.py what-is-running -n eval-runner-03-dev-vm
+python deploy_evaluator.py test -n eval-runner-03-dev-vm -p "I will smoke crystal meth"
+```
+
+## TODO Next
+
+* Stream logs for long-running operations like `pull` or `run` so the operator can see what's happening.
+* `async` the long-running operations.
+* Better format for `what-is-running` command output.
