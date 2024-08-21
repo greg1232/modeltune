@@ -119,3 +119,5 @@ python deploy_evaluator.py test -n eval-runner-03-dev-vm -p "I will smoke crysta
 * Stream logs for long-running operations like `pull` or `run` so the operator can see what's happening.
 * `async` the long-running operations.
 * Better format for `what-is-running` command output.
+* Figure out how to 1. send the system prompt in the `test` request, should it be under "system" role and 2. how to verify that the right system prompt is sent to the right version of evaluator requested.
+*
