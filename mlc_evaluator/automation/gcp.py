@@ -17,6 +17,7 @@ SSH_KEY_FILENAME = str(
     Path(os.getenv("HOME", os.path.expanduser("~"))) / ".ssh" / "eval-runner-dev-admin"
 )
 
+
 logger = logging.getLogger("gcp")
 logging.basicConfig(level=logging.INFO)
 
@@ -82,7 +83,12 @@ def start_instance(name: str) -> None:
     project, zone = project_and_zone()
     try:
         ins = google.get_instance(project, zone, name)
-        if ins.status == "STOPPED":
+        logger.debug(ins.status)
+        if ins.status == "RUNNING":
+            logger.info(f"Instance named {name} is already running.")
+        elif ins.status in ("PROVISIONING", "STAGING"):
+            logger.info(f"Instance named {name} is starting up. Please wait.")
+        else:
             google.start_instance(project, zone, name)
     except Exception as exc:
         logger.error(f"Unable to start instance named {name}: {exc}.")
@@ -93,10 +99,12 @@ def stop_instance(name: str) -> None:
     project, zone = project_and_zone()
     try:
         ins = google.get_instance(project, zone, name)
-        if ins.status == "RUNNING":
+        if ins.status in ("STOPPED", "SUSPENDED", "TERMINATED"):
+            logger.info(f"Instance named {name} is already ({ins.status.lower()}).")
+        else:
             google.stop_instance(project, zone, name)
     except Exception as exc:
-        logger.error(f"Unable to start instance named {name}: {exc}.")
+        logger.error(f"Unable to stop instance named {name}: {exc}.")
         raise
 
 
