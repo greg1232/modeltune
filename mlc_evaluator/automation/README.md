@@ -15,8 +15,10 @@ python deploy_evaluator.py # this will show help
 
 
 ```bash
+# optional (sensible defaults in gcp.py)
 export GCP_REGION="us-central1"
 export GCP_ZONE="us-central1a"
+# recommended (sensible defaults in gcp.py)
 export GCP_PROJECT="ai-safety-dev"
 export SSH_USER="admin"
 # github container registry token

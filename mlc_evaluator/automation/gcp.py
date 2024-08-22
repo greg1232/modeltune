@@ -26,15 +26,20 @@ class Instance:
     hostname: str
 
 
+def project_and_zone():
+    project = os.getenv("GCP_PROJECT", "ai-safety-dev")
+    zone = os.getenv("GCP_ZONE", "us-central1a")
+    assert project and zone
+    return project, zone
+
+
 def provision_instance():
     # TODO
     pass
 
 
 def list_instances():
-    project = os.getenv("GCP_PROJECT", None)
-    zone = os.getenv("GCP_ZONE", None)
-    assert project and zone
+    project, zone = project_and_zone()
     instances = google.list_all_instances(project)
 
     instance_summary = []
@@ -62,10 +67,7 @@ def list_instances():
 
 
 def get_ip_from_instance_name(name: str) -> str:
-    project = os.getenv("GCP_PROJECT", None)
-    zone = os.getenv("GCP_ZONE", None)
-    assert project and zone
-
+    project, zone = project_and_zone()
     ip = ""
     try:
         ins = google.get_instance(project, zone, name)
@@ -77,10 +79,7 @@ def get_ip_from_instance_name(name: str) -> str:
 
 
 def start_instance(name: str) -> None:
-    project = os.getenv("GCP_PROJECT", None)
-    zone = os.getenv("GCP_ZONE", None)
-    assert project and zone
-
+    project, zone = project_and_zone()
     try:
         ins = google.get_instance(project, zone, name)
         if ins.status == "STOPPED":
@@ -91,10 +90,7 @@ def start_instance(name: str) -> None:
 
 
 def stop_instance(name: str) -> None:
-    project = os.getenv("GCP_PROJECT", None)
-    zone = os.getenv("GCP_ZONE", None)
-    assert project and zone
-
+    project, zone = project_and_zone()
     try:
         ins = google.get_instance(project, zone, name)
         if ins.status == "RUNNING":
