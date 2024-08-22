@@ -20,7 +20,7 @@ def cli():
     pass
 
 
-@click.command()
+@cli.command()
 @click.option(
     "-h",
     "--hostname",
@@ -39,7 +39,7 @@ def configure(hostname: str = None, name: str = None, force: bool = False) -> No
     gcp.configure_environment(hostname, name, force)
 
 
-@click.command()
+@cli.command()
 @click.option(
     "-h",
     "--hostname",
@@ -60,7 +60,7 @@ def echo(hostname: str = None, name: str = None):
     logger.info(str(response))
 
 
-@click.command()
+@cli.command()
 @click.option("-i", "--image", required=True)
 @click.option("-t", "--tag", required=False, default="latest")
 @click.option(
@@ -92,7 +92,7 @@ def pull(
     logger.info(str(response))
 
 
-@click.command()
+@cli.command()
 @click.option("-i", "--image", required=True)
 @click.option("-t", "--tag", required=False, default="latest")
 @click.option(
@@ -122,21 +122,21 @@ def run(
     logger.info(str(response))
 
 
-@click.command()
+@cli.command()
 @click.option("-n", "--name", required=True, help="Instance name")
 def start(name: str):
     """Starts the cloud instance, if found and not already started."""
     gcp.start_instance(name)
 
 
-@click.command()
+@cli.command()
 @click.option("-n", "--name", required=True, help="Instance name")
 def stop(name: str):
     """Stops the cloud instance, if found and not already stopped."""
     gcp.stop_instance(name)
 
 
-@click.command()
+@cli.command()
 def instances():
     """Displays a list of all the instances in the default zone."""
     instances = gcp.list_instances()
@@ -147,7 +147,7 @@ def instances():
         print(f"Status: {instance['status']}")
 
 
-@click.command()
+@cli.command()
 @click.option("-n", "--name", required=True, help="Instance name")
 def instance(name: str):
     """Displays basic information about the specified instance."""
@@ -165,7 +165,7 @@ def instance(name: str):
         logger.error(f"Unable to find instance named {name}: {exc}.")
 
 
-@click.command()
+@cli.command()
 @click.option(
     "-h",
     "--hostname",
@@ -208,7 +208,7 @@ def test(hostname: str, name: str, prompt: str, model: str = mlcdocker.DEFAULT_M
         logger.error(f"Error sending prompt: {exc}")
 
 
-@click.command()
+@cli.command()
 @click.option(
     "-h",
     "--hostname",
@@ -229,18 +229,6 @@ def what_is_running(hostname: str, name: str):
     instance = gcp.Instance(hostname)
     response = gcp.remote_command(cmd, instance)
     logger.info(str(response))
-
-
-cli.add_command(configure)
-cli.add_command(echo)
-cli.add_command(instance)
-cli.add_command(instances)
-cli.add_command(pull)
-cli.add_command(run)
-cli.add_command(start)
-cli.add_command(stop)
-cli.add_command(test)
-cli.add_command(what_is_running)
 
 
 if __name__ == "__main__":
