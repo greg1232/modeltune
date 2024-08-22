@@ -27,13 +27,15 @@ Not supported (yet)
    directory in the same directory as the Dockerfile (at minimum, need the
    `adapter_config.json` and `adapter_model.safetensors` files. (maybe TODO...
    add details how to get that)
-1. Build the docker image, ensure the tag points at the MLC github package registry
+1. Build the docker image, ensure the tag points at the MLC github package registry.
+
+Initially the `<IMAGE_NAME>` is `ws3-model-test`.
 ```
-docker build -t ghcr.io/mlcommons/<NAME_OF_IMAGE> --build-arg ADAPTER_DIR=". /adapters" .
+docker build -t ghcr.io/mlcommons/<IMAGE_NAME> --build-arg ADAPTER_DIR=". /adapters" .
 ```
 1. Push the docker image to the MLC package registry
 ```
-docker push ghcr.io/mlcommons/<NAME_OF_IMAGE>:latest
+docker push ghcr.io/mlcommons/<IMAGE_NAME>:latest
 ```
 
 ## Step 2: Running the image
@@ -53,7 +55,7 @@ docker run \
     --env "HUGGING_FACE_HUB_TOKEN=<ADD_HF_TOKEN>" \
     -p 8000:8000 \
     --ipc=host \
-    ghcr.io/mlcommons/<NAME_OF_IMAGE>:latest \
+    ghcr.io/mlcommons/<IMAGE_NAME>:latest \
     --api-key="<YOUR_SUPER_SECURE_API_KEY>"
 ```
 
@@ -72,3 +74,7 @@ curl localhost:8000/v1/models | jq .
 
 ## FAQs
 (coming soon?)
+
+## TODO
+
+* Ws3 should finalized the naming and versioning of the evaluator models. Let us have FIXME to decide that should the default model name be.
