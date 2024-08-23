@@ -22,7 +22,7 @@ class TogetherModelConfig(BaseModel):
     api_key: TogetherApiKey
 
 
-class PromptEngineeredAnnotatorConfig(BaseModel):
+class TogetherPEAnnotatorConfig(BaseModel):
     name: str
     # FIXME - in the future, model_config should be a union eg Union[ConfigA, ConfigB]
     llm_config: TogetherModelConfig
@@ -33,13 +33,13 @@ class PromptEngineeredAnnotatorConfig(BaseModel):
     pass
 
 
-class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
-    """Annotator using prompt engineering for hazard and safety classification"""
+class TogetherPEAnnotator(CompletionAnnotator[SafetyModelResponse]):
+    """Annotator using prompt engineered Together model for hazard and safety classification"""
 
     def __init__(
         self,
         uid: str,
-        config: PromptEngineeredAnnotatorConfig,
+        config: TogetherPEAnnotatorConfig,
     ):
         super().__init__(uid)
         self.config = config

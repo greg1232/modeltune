@@ -1,9 +1,9 @@
 import json
 
-from modelgauge.annotators.prompt_engineered_annotator import (
-    PromptEngineeredAnnotator,
-    PromptEngineeredAnnotatorConfig,
+from modelgauge.annotators.together_pe_annotator import (
     TogetherModelConfig,
+    TogetherPEAnnotator,
+    TogetherPEAnnotatorConfig,
 )
 from modelgauge.prompt import ChatMessage, ChatPrompt, ChatRole, TextPrompt
 from modelgauge.safety_model_constants import ASSISTANT_ROLE, SYSTEM_ROLE, USER_ROLE
@@ -18,7 +18,7 @@ from modelgauge.suts.together_client import (
 
 
 def _fake_annotator(role_to_measure=ASSISTANT_ROLE):
-    fake_config = PromptEngineeredAnnotatorConfig(
+    fake_config = TogetherPEAnnotatorConfig(
         name="test_annotator",
         llm_config=TogetherModelConfig(
             path="fake/path",
@@ -30,7 +30,7 @@ def _fake_annotator(role_to_measure=ASSISTANT_ROLE):
         role_to_measure=role_to_measure,
     )
 
-    fake_annotator = PromptEngineeredAnnotator("_", fake_config)
+    fake_annotator = TogetherPEAnnotator("_", fake_config)
 
     return fake_annotator
 

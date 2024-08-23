@@ -1,10 +1,10 @@
 import os
 
 from modelgauge.annotator_registry import ANNOTATORS
-from modelgauge.annotators.prompt_engineered_annotator import (
-    PromptEngineeredAnnotator,
-    PromptEngineeredAnnotatorConfig,
+from modelgauge.annotators.together_pe_annotator import (
     TogetherModelConfig,
+    TogetherPEAnnotator,
+    TogetherPEAnnotatorConfig,
 )
 from modelgauge.safety_model_constants import ASSISTANT_ROLE
 from modelgauge.safety_model_prompts import (
@@ -14,7 +14,7 @@ from modelgauge.safety_model_prompts import (
 )
 from modelgauge.suts.together_client import TogetherApiKey
 
-LLAMA_3_70B_CONFIG = PromptEngineeredAnnotatorConfig(
+LLAMA_3_70B_CONFIG = TogetherPEAnnotatorConfig(
     name="llama_3_70b",
     llm_config=TogetherModelConfig(
         path="meta-llama/Llama-3-70b-chat-hf",
@@ -26,6 +26,4 @@ LLAMA_3_70B_CONFIG = PromptEngineeredAnnotatorConfig(
     role_to_measure=ASSISTANT_ROLE,
 )
 
-ANNOTATORS.register(
-    PromptEngineeredAnnotator, LLAMA_3_70B_CONFIG.name, LLAMA_3_70B_CONFIG
-)
+ANNOTATORS.register(TogetherPEAnnotator, LLAMA_3_70B_CONFIG.name, LLAMA_3_70B_CONFIG)
