@@ -1,10 +1,10 @@
 import os
 
 from modelgauge.annotator_registry import ANNOTATORS
-from modelgauge.annotators.together_pe_annotator import (
+from modelgauge.annotators.prompt_engineered_annotator import (
     TogetherModelConfig,
-    TogetherPEAnnotator,
-    TogetherPEAnnotatorConfig,
+    PromptEngineeredAnnotator,
+    PromptEngineeredAnnotatorConfig,
 )
 from modelgauge.safety_model_constants import ASSISTANT_ROLE
 from modelgauge.safety_model_prompts import (
@@ -14,7 +14,7 @@ from modelgauge.safety_model_prompts import (
 )
 from modelgauge.suts.together_client import TogetherApiKey
 
-MISTRAL_8x22B_CONFIG = TogetherPEAnnotatorConfig(
+MISTRAL_8x22B_CONFIG = PromptEngineeredAnnotatorConfig(
     name="mistral_8x22b",
     llm_config=TogetherModelConfig(
         path="mistralai/Mixtral-8x22B-Instruct-v0.1",
@@ -27,5 +27,5 @@ MISTRAL_8x22B_CONFIG = TogetherPEAnnotatorConfig(
 )
 
 ANNOTATORS.register(
-    TogetherPEAnnotator, MISTRAL_8x22B_CONFIG.name, MISTRAL_8x22B_CONFIG
+    PromptEngineeredAnnotator, MISTRAL_8x22B_CONFIG.name, MISTRAL_8x22B_CONFIG
 )

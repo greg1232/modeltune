@@ -1,10 +1,10 @@
 import os
 
 from modelgauge.annotator_registry import ANNOTATORS
-from modelgauge.annotators.together_pe_annotator import (
+from modelgauge.annotators.prompt_engineered_annotator import (
     TogetherModelConfig,
-    TogetherPEAnnotator,
-    TogetherPEAnnotatorConfig,
+    PromptEngineeredAnnotator,
+    PromptEngineeredAnnotatorConfig,
 )
 from modelgauge.safety_model_constants import ASSISTANT_ROLE
 from modelgauge.safety_model_prompts import (
@@ -14,7 +14,7 @@ from modelgauge.safety_model_prompts import (
 )
 from modelgauge.suts.together_client import TogetherApiKey
 
-LLAMA_31_70B_CONFIG = TogetherPEAnnotatorConfig(
+LLAMA_31_70B_CONFIG = PromptEngineeredAnnotatorConfig(
     name="llama_3.1_70b",
     llm_config=TogetherModelConfig(
         path="meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
@@ -26,4 +26,4 @@ LLAMA_31_70B_CONFIG = TogetherPEAnnotatorConfig(
     role_to_measure=ASSISTANT_ROLE,
 )
 
-ANNOTATORS.register(TogetherPEAnnotator, LLAMA_31_70B_CONFIG.name, LLAMA_31_70B_CONFIG)
+ANNOTATORS.register(PromptEngineeredAnnotator, LLAMA_31_70B_CONFIG.name, LLAMA_31_70B_CONFIG)

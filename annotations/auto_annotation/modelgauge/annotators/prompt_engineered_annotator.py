@@ -1,7 +1,7 @@
 import json
 
 from pydantic import BaseModel
-
+from typing import Union
 from modelgauge.annotator import CompletionAnnotator
 from modelgauge.prompt import ChatMessage, ChatPrompt, ChatRole, SUTOptions, TextPrompt
 from modelgauge.safety_model_response import SafetyModelResponse
@@ -15,17 +15,32 @@ from modelgauge.suts.together_client import (
     TogetherChatSUT,
 )
 
+# FIXME - To use the openai GPT-4 annotator, add the "ChatRole.system: _SYSTEM_ROLE", role into the _ROLE_MAP in modelgauge/plugins/openai/modelgauge/suts/openai_client.py: 
+# LINE 32: 
+#
+# _ROLE_MAP = {
+#     ChatRole.user: _USER_ROLE,
+#     ChatRole.sut: _ASSISTANT_ROLE,
+#     ChatRole.system: _SYSTEM_ROLE,   ##### This line needs to be added into _ROLE_MAP
+# }
 
-class TogetherModelConfig(BaseModel):
+from modelgauge.suts.openai_client import OpenAIApiKey, OpenAIOrgId, OpenAIChat, OpenAIChatRequest
+
+class BaseLLMConfig(BaseModel):
     path: str
     max_tokens: int = 4000
+
+class TogetherModelConfig(BaseLLMConfig):
     api_key: TogetherApiKey
 
+class OpenAIModelConfig(BaseLLMConfig):
+    api_key: OpenAIApiKey 
+    org_id: OpenAIOrgId
 
-class TogetherPEAnnotatorConfig(BaseModel):
+class PromptEngineeredAnnotatorConfig(BaseModel):
     name: str
     # FIXME - in the future, model_config should be a union eg Union[ConfigA, ConfigB]
-    llm_config: TogetherModelConfig
+    llm_config: Union[TogetherModelConfig, OpenAIModelConfig]
     labeler_system_prompt: str
     labeler_user_prompt: str
     taxonomy: str
@@ -33,19 +48,28 @@ class TogetherPEAnnotatorConfig(BaseModel):
     pass
 
 
-class TogetherPEAnnotator(CompletionAnnotator[SafetyModelResponse]):
+class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
     """Annotator using prompt engineered Together model for hazard and safety classification"""
 
     def __init__(
         self,
         uid: str,
-        config: TogetherPEAnnotatorConfig,
+        config: PromptEngineeredAnnotatorConfig,
     ):
         super().__init__(uid)
         self.config = config
-        self.model = TogetherChatSUT(
-            uid, self.config.llm_config.path, self.config.llm_config.api_key
-        )
+
+        if isinstance(self.config.llm_config, TogetherModelConfig):
+            self.model = TogetherChatSUT(
+                uid, self.config.llm_config.path, self.config.llm_config.api_key
+            )
+        elif isinstance(self.config.llm_config, OpenAIModelConfig):
+            self.model = OpenAIChat(
+                "annotator", "gpt-4", self.config.llm_config.api_key, self.config.llm_config.org_id
+            )
+        else:
+            raise ValueError(f"Unsupported LLM config type: {type(self.config.llm_config)}")
+
 
     def translate_request(self, prompt: PromptWithContext, completion: SUTCompletion):
         """Convert the prompt+completion into the native representation for this annotator."""

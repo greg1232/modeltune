@@ -9,11 +9,11 @@ from modelgauge.annotators.llama_guard_2_lora_annotator import (
 )
 from modelgauge.annotators.llama_guard_annotator import LlamaGuardAnnotator
 from modelgauge.annotators.mistral_8x22b_instruct_annotator import MISTRAL_8x22B_CONFIG
-from modelgauge.annotators.together_pe_annotator import TogetherPEAnnotator
+from modelgauge.annotators.prompt_engineered_annotator import PromptEngineeredAnnotator
 from modelgauge.prompt import ChatMessage, ChatPrompt, ChatRole
 from modelgauge.safety_model_constants import DEFAULT_MINIMAL_SAFETY_CATEGORIES
 
-a1 = TogetherPEAnnotator(MISTRAL_8x22B_CONFIG.name, MISTRAL_8x22B_CONFIG)
-a2 = TogetherPEAnnotator(LLAMA_3_70B_CONFIG.name, LLAMA_3_70B_CONFIG)
+a1 = PromptEngineeredAnnotator(MISTRAL_8x22B_CONFIG.name, MISTRAL_8x22B_CONFIG)
+a2 = PromptEngineeredAnnotator(LLAMA_3_70B_CONFIG.name, LLAMA_3_70B_CONFIG)
 
 ANNOTATORS.register(EnsembleAnnotator, "ensemble", [a1, a2])
