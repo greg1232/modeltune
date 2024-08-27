@@ -1,6 +1,5 @@
 # SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
-
 from enum import Enum
 from model.mlc_llama_guard.meta_llama_recipes.src.llama_recipes.data.llama_guard.finetuning_data_formatter import (
     Guidelines,
@@ -12,6 +11,14 @@ from model.mlc_llama_guard.meta_llama_recipes.src.llama_recipes.data.llama_guard
     FormatterConfigs,
 )
 
+class ModelBackbone(Enum):
+    """
+    Enum for defining the model backbone that may be used for training with this data. 
+    """
+    LLAMAGUARD2 = "llamaguard2",
+    LLAMAGUARD3 = "llamaguard3",
+    MISTRAL = "mistralv0_3"
+    
 
 class AgentType(Enum):
     """
@@ -19,10 +26,8 @@ class AgentType(Enum):
     AGENT: this role is for the last assistant response
 
     """
-
     AGENT = "agent"
     USER = "user"
-
 
 # MLC V 0.5 Taxonomy
 MLC_TAXONOMY_0_5 = {
@@ -184,6 +189,29 @@ Provide your safety assessment for {agent_type} in the above conversation:
     should_shuffle_category_codes=True,
 )
 
+# LlamaGuard 3 Config
+llama_guard3_prompt_configs = LlamaGuardPromptConfigs(
+    instructions_format_string="""<|begin_of_text|><|start_header_id|>user<|end_header_id|> Task: Check if there is unsafe content in '{agent_type}' messages in conversations according our safety policy with the below categories and provide a 'rating'. If there is unsafe content, provide an 'Explanation' of why the content is unsafe according to out safety policy below.
+
+<BEGIN UNSAFE CONTENT CATEGORIES>
+{guidelines}
+<END UNSAFE CONTENT CATEGORIES>
+
+<BEGIN CONVERSATION>
+
+{conversation}
+
+<END CONVERSATION>
+
+Provide your safety assessment for '{agent_type}' in the above conversation:
+- First line must read 'safe' or 'unsafe'.
+- If unsafe, a second line must include a comma-separated list of violated categories.
+- If unsafe, a third line must include an 'Explanation:' of why the content is unsafe with respect to the violated categories. <|eot_id|><|start_header_id|>assistant<|end_header_id|>""",
+    should_include_category_descriptions=False,
+    should_shuffle_category_codes=False
+)
+
+
 # Generation related configs
 llama_guard_generation_configs = LlamaGuardGenerationConfigs(
     should_list_violated_codes=True,
@@ -201,6 +229,16 @@ augmentation_configs = AugmentationConfigs(
 formatter_configs = FormatterConfigs(
     guidelines=MLC_0_5_GUIDELINES,
     llama_guard_prompt_configs=llama_guard_prompt_configs,
+    llama_guard_generation_configs=llama_guard_generation_configs,
+    augmentation_configs=augmentation_configs,
+    random_seed=42,
+)
+
+
+# Formatter configs LG3
+formatter_configs_lg3 = FormatterConfigs(
+    guidelines=MLC_0_5_GUIDELINES,
+    llama_guard_prompt_configs=llama_guard3_prompt_configs,
     llama_guard_generation_configs=llama_guard_generation_configs,
     augmentation_configs=augmentation_configs,
     random_seed=42,

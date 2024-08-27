@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 from abc import ABC, abstractmethod
+from enum import Enum
 from pathlib import Path
 from typing import Union
-
 
 class MLCDatasetsFormatterBase(ABC):
     """
@@ -21,6 +21,10 @@ class MLCDatasetsFormatterBase(ABC):
     @abstractmethod
     def set_conversation_column_name(self):
         """Extract the text field from the data."""
+    
+    @abstractmethod
+    def set_model_backbone(self):
+        """The model backbone for finetuning."""
 
     @abstractmethod
     def get_training_examples(self, file_path):

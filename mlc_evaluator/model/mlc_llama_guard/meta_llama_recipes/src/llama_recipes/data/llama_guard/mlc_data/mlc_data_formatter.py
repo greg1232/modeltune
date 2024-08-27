@@ -13,6 +13,8 @@ from model.mlc_llama_guard.meta_llama_recipes.src.llama_recipes.data.llama_guard
     MLC_TAXONOMY_0_5,
     AgentType,
     formatter_configs,
+    formatter_configs_lg3,
+    ModelBackbone
 )
 
 from model.mlc_llama_guard.meta_llama_recipes.src.llama_recipes.data.llama_guard.mlc_finetuning_data_formatter import (
@@ -44,6 +46,10 @@ class MLCDataFormatter(MLCDatasetsFormatterBase):
     def set_conversation_column_name(self, column_name):
         """Pass the name of the column/field for the text/conversation."""
         self.conversation_column_name = column_name
+
+    def set_model_backbone(self, model_backbone):
+        """Pass the model backbone name for appropiate formatting"""
+        self.model_backbone = model_backbone
 
     def get_training_examples(self, file_path):
         """Extract training examples with proper labels and category codes."""
@@ -145,10 +151,21 @@ class MLCDataFormatter(MLCDatasetsFormatterBase):
 
     def get_formatted_training_examples(self, training_examples):
         """Method to format the training examples for finetuning"""
-         # Call the create_formatted_finetuning_examples function
-        formatted_examples = create_formatted_finetuning_examples(
-        training_examples, formatter_configs
+        formatted_examples = []
+
+        # Call the create_formatted_finetuning_examples function
+
+        if self.model_backbone == ModelBackbone.LLAMAGUARD2.value[0]:
+            formatted_examples = create_formatted_finetuning_examples(
+            training_examples, formatter_configs
         )
+        elif self.model_backbone == ModelBackbone.LLAMAGUARD3.value[0]:
+            formatted_examples = create_formatted_finetuning_examples(
+            training_examples, formatter_configs_lg3
+        )
+        else:
+            raise ValueError("Unrecognized backbone")
+        
         return formatted_examples
 
 
@@ -171,14 +188,24 @@ if __name__ == "__main__":
         type=str,
         help="Column name for text/conversation.",
     )
+    parser.add_argument(
+        "--model_backbone",
+        required=True,
+        type=str,
+        default="llamaguard2",
+        help="Model backbone for finetuning.",
+    )
     args = parser.parse_args()
 
     assert args.file_path, "invalid file path"
     mlc_formatter = MLCDataFormatter(args.file_path)
     assert mlc_formatter, "Invalid Dataset formatter object"
+    
 
     mlc_formatter.set_annotation_column_name(args.label_column)
     mlc_formatter.set_conversation_column_name(args.text_column)
+    mlc_formatter.set_model_backbone(args.model_backbone)
+
     training_examples, training_examples_serialized = (
         mlc_formatter.get_training_examples(args.file_path)
     )
