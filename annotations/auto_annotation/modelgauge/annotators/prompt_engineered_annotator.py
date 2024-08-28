@@ -32,7 +32,6 @@ from modelgauge.suts.together_client import (
 # }
 
 
-
 class BaseLLMConfig(BaseModel):
     path: str
     max_tokens: int = 4000
