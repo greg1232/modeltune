@@ -1,9 +1,9 @@
 import json
 
 from modelgauge.annotators.prompt_engineered_annotator import (
-    TogetherModelConfig,
     PromptEngineeredAnnotator,
     PromptEngineeredAnnotatorConfig,
+    TogetherModelConfig,
 )
 from modelgauge.prompt import ChatMessage, ChatPrompt, ChatRole, TextPrompt
 from modelgauge.safety_model_constants import ASSISTANT_ROLE, SYSTEM_ROLE, USER_ROLE

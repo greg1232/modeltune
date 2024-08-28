@@ -1,13 +1,20 @@
 import json
+from typing import Union
 
 from pydantic import BaseModel
-from typing import Union
+
 from modelgauge.annotator import CompletionAnnotator
 from modelgauge.prompt import ChatMessage, ChatPrompt, ChatRole, SUTOptions, TextPrompt
 from modelgauge.safety_model_response import SafetyModelResponse
 from modelgauge.safety_model_utils import flatten_conversation_to_str
 from modelgauge.single_turn_prompt_response import PromptWithContext
 from modelgauge.sut import SUTCompletion
+from modelgauge.suts.openai_client import (
+    OpenAIApiKey,
+    OpenAIChat,
+    OpenAIChatRequest,
+    OpenAIOrgId,
+)
 from modelgauge.suts.together_client import (
     TogetherApiKey,
     TogetherChatRequest,
@@ -24,12 +31,6 @@ from modelgauge.suts.together_client import (
 #     ChatRole.system: _SYSTEM_ROLE,   ##### This line needs to be added into _ROLE_MAP
 # }
 
-from modelgauge.suts.openai_client import (
-    OpenAIApiKey,
-    OpenAIOrgId,
-    OpenAIChat,
-    OpenAIChatRequest,
-)
 
 
 class BaseLLMConfig(BaseModel):
