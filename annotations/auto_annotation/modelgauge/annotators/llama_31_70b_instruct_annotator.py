@@ -26,4 +26,6 @@ LLAMA_31_70B_CONFIG = PromptEngineeredAnnotatorConfig(
     role_to_measure=ASSISTANT_ROLE,
 )
 
-ANNOTATORS.register(PromptEngineeredAnnotator, LLAMA_31_70B_CONFIG.name, LLAMA_31_70B_CONFIG)
+ANNOTATORS.register(
+    PromptEngineeredAnnotator, LLAMA_31_70B_CONFIG.name, LLAMA_31_70B_CONFIG
+)

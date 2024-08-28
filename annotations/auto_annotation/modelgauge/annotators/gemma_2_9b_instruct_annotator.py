@@ -26,4 +26,6 @@ GEMMA_2_9B_CONFIG = PromptEngineeredAnnotatorConfig(
     role_to_measure=ASSISTANT_ROLE,
 )
 
-ANNOTATORS.register(PromptEngineeredAnnotator, GEMMA_2_9B_CONFIG.name, GEMMA_2_9B_CONFIG)
+ANNOTATORS.register(
+    PromptEngineeredAnnotator, GEMMA_2_9B_CONFIG.name, GEMMA_2_9B_CONFIG
+)
