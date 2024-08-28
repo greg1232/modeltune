@@ -9,6 +9,7 @@ class SafetyModelResponse(BaseModel):
     is_safe: bool
     safety_categories: List[str]
     is_valid: bool = True
+    raw_response: Optional[str] = None
     reasoning: Optional[str] = None
     total_tokens_used: Optional[float] = None
     logprobs: Optional[Any] = None

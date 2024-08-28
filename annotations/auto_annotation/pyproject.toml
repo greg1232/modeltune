@@ -23,6 +23,7 @@ isort = "^5.13.2"
 pre-commit = "^3.8.0"
 black = "^24.4.2"
 openai = "1.40.3"
+huggingface-hub = "^0.24.6"
 
 [tool.black]
 target-version = ["py310"]
