@@ -2,9 +2,9 @@ import os
 
 from modelgauge.annotator_registry import ANNOTATORS
 from modelgauge.annotators.prompt_engineered_annotator import (
-    TogetherModelConfig,
-    PromptEngineeredAnnotatorConfig,
     PromptEngineeredAnnotator,
+    PromptEngineeredAnnotatorConfig,
+    TogetherModelConfig,
 )
 from modelgauge.safety_model_constants import ASSISTANT_ROLE
 from modelgauge.safety_model_prompts import (
@@ -26,4 +26,6 @@ GEMMA_2_9B_CONFIG = PromptEngineeredAnnotatorConfig(
     role_to_measure=ASSISTANT_ROLE,
 )
 
-ANNOTATORS.register(PromptEngineeredAnnotator, GEMMA_2_9B_CONFIG.name, GEMMA_2_9B_CONFIG)
+ANNOTATORS.register(
+    PromptEngineeredAnnotator, GEMMA_2_9B_CONFIG.name, GEMMA_2_9B_CONFIG
+)

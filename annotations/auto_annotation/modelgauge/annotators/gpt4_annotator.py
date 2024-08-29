@@ -1,25 +1,34 @@
+import json
 import os
+from typing import Callable, Dict, Optional
+
+from modelgauge.annotator import CompletionAnnotator
 from modelgauge.annotator_registry import ANNOTATORS
 from modelgauge.annotators.prompt_engineered_annotator import (
-    PromptEngineeredAnnotatorConfig, PromptEngineeredAnnotator,
-    OpenAIModelConfig)
+    OpenAIModelConfig,
+    PromptEngineeredAnnotator,
+    PromptEngineeredAnnotatorConfig,
+)
+from modelgauge.prompt import ChatMessage, ChatPrompt, ChatRole, SUTOptions, TextPrompt
 from modelgauge.safety_model_constants import ASSISTANT_ROLE
-from modelgauge.safety_model_prompts import (LABELER_SYS_PROMPT,
-                                             LABELER_USER_PROMPT,
-                                             MLC_TAXONOMY_0_5)
+from modelgauge.safety_model_prompts import (
+    LABELER_SYS_PROMPT,
+    LABELER_USER_PROMPT,
+    MLC_TAXONOMY_0_5,
+)
 from modelgauge.safety_model_response import SafetyModelResponse
 from modelgauge.safety_model_utils import flatten_conversation_to_str
 from modelgauge.single_turn_prompt_response import PromptWithContext
-from modelgauge.annotator import CompletionAnnotator
-from typing import Callable, Dict, Optional
-from modelgauge.prompt import (ChatMessage, ChatPrompt, ChatRole, SUTOptions, TextPrompt)
 from modelgauge.sut import SUTCompletion
-from modelgauge.suts.openai_client import OpenAIApiKey, OpenAIOrgId, OpenAIChat, OpenAIChatRequest
-import json
+from modelgauge.suts.openai_client import (
+    OpenAIApiKey,
+    OpenAIChat,
+    OpenAIChatRequest,
+    OpenAIOrgId,
+)
 
-
-# FIXME - To use the openai GPT-4 annotator, add the "ChatRole.system: _SYSTEM_ROLE", role into the _ROLE_MAP in modelgauge/plugins/openai/modelgauge/suts/openai_client.py: 
-# LINE 32: 
+# FIXME - To use the openai GPT-4 annotator, add the "ChatRole.system: _SYSTEM_ROLE", role into the _ROLE_MAP in modelgauge/plugins/openai/modelgauge/suts/openai_client.py:
+# LINE 32:
 #
 # _ROLE_MAP = {
 #     ChatRole.user: _USER_ROLE,
@@ -41,6 +50,4 @@ GPT_4_CONFIG = PromptEngineeredAnnotatorConfig(
 )
 
 
-ANNOTATORS.register(
-    PromptEngineeredAnnotator, GPT_4_CONFIG.name, GPT_4_CONFIG
-)
+ANNOTATORS.register(PromptEngineeredAnnotator, GPT_4_CONFIG.name, GPT_4_CONFIG)
