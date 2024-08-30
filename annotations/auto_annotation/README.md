@@ -25,6 +25,17 @@ This command line tool depends on modelgauge and can help with the following
         1. Requires csv file has the following columns: `UID`, `Prompt`, `Response`, `SUT`
         1. Currently (as of July 20, 2024) the requirements are indicated in the `annotation_pipeline.py::CsvAnnotatorInput` class definition.
 
-## Development vs Installation
+## Installing these annotators into modelgauge
 
-This code declares modelgauge as a poetry dependency. Because it can also be installed into modelgauge via poetry, modelgauge can't be a dependency. So we moved the modelgauge dependency into the "dev" group in pyproject.toml, and you will need to poetry install that group for local development.
+modelgauge is a public repo, and this package is private, so we don't want to reference this project in modelgauge's pyproject.toml file.
+
+If you want to install this annotator package into modelgauge (e.g. for a local or private test), do the following in your modelgauge directory:
+
+```bash
+# configure modelgauge and its dependencies
+poetry install
+# activate the venv for pip
+source .venv/bin/activate
+# install the annotators from modeltune with pip
+pip install -e 'git+https://github.com/mlcommons/modeltune.git/#egg=modelgauge_teacher_models[main]&subdirectory=annotations/auto_annotation'
+```
