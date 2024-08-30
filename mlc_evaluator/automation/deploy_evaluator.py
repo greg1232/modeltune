@@ -6,10 +6,9 @@ import logging
 import os
 
 import click
-from openai import OpenAI
-
 import gcp
 import mlcdocker
+from openai import OpenAI
 
 logger = logging.getLogger("evaluator-deploy")
 logging.basicConfig(level=logging.INFO)
@@ -193,7 +192,7 @@ def instance(name: str):
 def test(hostname: str, name: str, prompt: str, model: str = mlcdocker.DEFAULT_MODEL):
     """Sends a test prompt to the vllm server."""
     hostname = gcp.find_ip_address(hostname, name)
-    base_url = f"http://{hostname}:8000/v1"
+    base_url = mlcdocker.base_url(hostname)
     try:
         client = OpenAI(
             base_url=base_url,
@@ -229,6 +228,34 @@ def what_is_running(hostname: str, name: str):
     instance = gcp.Instance(hostname)
     response = gcp.remote_command(cmd, instance)
     logger.info(str(response))
+
+
+@cli.command()
+@click.option(
+    "-n",
+    "--name",
+    default=None,
+    help="Returns a URL to the specified instance, or first running instance we found",
+)
+def url(name: str):
+    """This is to enable commands like curl $(python deploy_evaluator.py url)/..."""
+    url = mlcdocker.base_url("localhost")
+
+    if name:
+        try:
+            hostname = gcp.find_ip_address(name=name)
+            if hostname:
+                url = mlcdocker.base_url(hostname)
+        except:
+            pass
+    else:
+        instances = gcp.list_instances(running_only=True, max_instances=1)
+        if instances:
+            instance = instances[0]
+            hostname = instance["ip_address"]
+            url = mlcdocker.base_url(hostname)
+    print(url)  # we always want to print something regardless of log level
+    return url
 
 
 if __name__ == "__main__":

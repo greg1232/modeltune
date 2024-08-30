@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import paramiko
-
 from vendor import google
 
 SSH_USER = os.getenv("SSH_USER", "admin")
@@ -39,7 +38,7 @@ def provision_instance():
     pass
 
 
-def list_instances():
+def list_instances(running_only: bool = False, max_instances: int = None):
     project, zone = project_and_zone()
     instances = google.list_all_instances(project)
 
@@ -54,14 +53,17 @@ def list_instances():
                 )[0]
             except:
                 ip_address = "unknown"
-            instance_summary.append(
-                {
-                    "id": instance.id,
-                    "name": instance.name,
-                    "status": instance.status,
-                    "ip_address": ip_address,
-                }
-            )
+
+            if not running_only or instance.status == "RUNNING":
+                if not max_instances or len(instance_summary) < max_instances:
+                    instance_summary.append(
+                        {
+                            "id": instance.id,
+                            "name": instance.name,
+                            "status": instance.status,
+                            "ip_address": ip_address,
+                        }
+                    )
     except Exception as exc:
         logger.error(f"Unable to look up instances in zone {zone}: {exc}.")
     return instance_summary

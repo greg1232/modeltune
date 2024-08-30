@@ -6,6 +6,7 @@ DEFAULT_NAMESPACE = "mlcommons"
 DEFAULT_REGISTRY = "ghcr.io"
 DEFAULT_MODEL = "llamaguard-lora"
 
+
 def image_uri(
     image: str,
     tag: str = "latest",
@@ -28,6 +29,7 @@ def what_is_running_cmd():
 
 
 def run_cmd(image: str, tag: str) -> str:
+    api_key = os.getenv("VLLM_API_KEY", "secret_key")
     parts = (
         "docker run",
         "--runtime nvidia",
@@ -38,7 +40,11 @@ def run_cmd(image: str, tag: str) -> str:
         "-p 8000:8000",
         "--ipc=host",
         image_uri(image, tag),
-        f"--api_key={os.getenv("VLLM_API_KEY", "secret_key")}",
-        "--dtype=half"
+        f"--api_key={api_key}",
+        "--dtype=half",
     )
     return " ".join(parts)
+
+
+def base_url(hostname: str):
+    return f"http://{hostname}:8000/v1"

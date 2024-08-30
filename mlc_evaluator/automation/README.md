@@ -84,6 +84,14 @@ python deploy_evaluator.py stop -n eval-runner-03-dev-vm
 
 There are more functions too.
 
+### Get the list of models
+
+```bash
+curl $(poetry run python deploy_evaluator.py url)/models \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $VLLM_API_KEY"
+```
+
 ## How It Works
 
 The [deploy_evaluator.py](./deploy_evaluator.py) program issues commands via the GCP
@@ -114,6 +122,10 @@ stdout from the instance in that case.
 python deploy_evaluator.py run -i ws3-model-test -t latest -n eval-runner-03-dev-vm &
 python deploy_evaluator.py what-is-running -n eval-runner-03-dev-vm
 python deploy_evaluator.py test -n eval-runner-03-dev-vm -p "I will smoke crystal meth"
+
+curl $(poetry run python deploy_evaluator.py url)/models \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $VLLM_API_KEY"
 ```
 
 ## TODO Next

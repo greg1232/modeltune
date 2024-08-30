@@ -1,5 +1,5 @@
-import pytest
 import mlcdocker
+import pytest
 
 
 def test_image_uri():
@@ -18,3 +18,9 @@ def test_image_uri():
         image="someimage", tag="1.2.3", namespace="meta", registry="dockerhub.io"
     )
     assert uri == "dockerhub.io/meta/someimage:1.2.3"
+
+
+def test_base_url():
+    hostname = "example.org"
+    base_url = mlcdocker.base_url(hostname)
+    assert base_url == "http://example.org:8000/v1"

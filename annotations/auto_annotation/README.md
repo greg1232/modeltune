@@ -24,3 +24,7 @@ This command line tool depends on modelgauge and can help with the following
     1. `<CSV_FILE>`: csv file must adhere to a certain format (TODO provide reference).
         1. Requires csv file has the following columns: `UID`, `Prompt`, `Response`, `SUT`
         1. Currently (as of July 20, 2024) the requirements are indicated in the `annotation_pipeline.py::CsvAnnotatorInput` class definition.
+
+## Development vs Installation
+
+This code declares modelgauge as a poetry dependency. Because it can also be installed into modelgauge via poetry, modelgauge can't be a dependency. So we moved the modelgauge dependency into the "dev" group in pyproject.toml, and you will need to poetry install that group for local development.
