@@ -55,9 +55,10 @@ class EnsembleAnnotator(CompletionAnnotator[SafetyModelResponse]):
                 {key: annotator.translate_response(request[key], response[key])}
             )
 
-        return self.simple_join_evaluator_responses(list(responses.values()))
+        return EnsembleAnnotator.simple_join_evaluator_responses(list(responses.values()))
 
-    def simple_join_evaluator_responses(self, annotations: List[SafetyModelResponse]):
+    @staticmethod
+    def simple_join_evaluator_responses(annotations: List[SafetyModelResponse]):
         """Method to join several safety model responses into one. Naive method
         **is_valid**:
             - Some safety models may fail to give a response. We need to account for this
