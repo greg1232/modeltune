@@ -55,7 +55,9 @@ class EnsembleAnnotator(CompletionAnnotator[SafetyModelResponse]):
                 {key: annotator.translate_response(request[key], response[key])}
             )
 
-        return EnsembleAnnotator.simple_join_evaluator_responses(list(responses.values()))
+        return EnsembleAnnotator.simple_join_evaluator_responses(
+            list(responses.values())
+        )
 
     @staticmethod
     def simple_join_evaluator_responses(annotations: List[SafetyModelResponse]):
