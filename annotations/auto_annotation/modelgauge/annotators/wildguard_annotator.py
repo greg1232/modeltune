@@ -32,19 +32,36 @@ Answers: [/INST]
 """
 
 
+class HuggingFaceConfig(BaseModel):
+    """This is to unify the use of XXConfig objects across annotators,
+    for easier integration with modelgauge"""
+
+    name: str
+    inference_endpoint_name: str
+    api_key: str
+
+
 class WildguardResponse(BaseModel):
     harmful_request: bool
     response_refusal: bool
     harmful_response: bool
 
 
+WILDGUARD_ANNOTATOR_CONFIG = HuggingFaceConfig(
+    api_key=os.getenv("HF_TOKEN", None),
+    name="wildguard",
+    inference_endpoint_name="wildguard-test-ws3",
+)
+
+
 class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
     def __init__(self, uid, hf_endpoint_name):
         super().__init__(uid)
 
+        # TODO: move this to HuggingFaceConfig
         if os.getenv("HF_TOKEN", "") == "":
             raise Exception("HF_TOKEN must be set")
-
+        # TODO: use HuggingFaceConfig to initialize WildguardAnnotator objects rather than the endpoint name
         endpoint = get_inference_endpoint(hf_endpoint_name)
 
         if endpoint.status == InferenceEndpointStatus.RUNNING:
@@ -177,5 +194,8 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
         )
 
 
-HF_INFERENCE_ENDPOINT_NAME = "wildguard-test-ws3"
-ANNOTATORS.register(WildguardAnnotator, "wildguard", HF_INFERENCE_ENDPOINT_NAME)
+ANNOTATORS.register(
+    WildguardAnnotator,
+    WILDGUARD_ANNOTATOR_CONFIG.name,
+    WILDGUARD_ANNOTATOR_CONFIG.inference_endpoint_name,
+)
