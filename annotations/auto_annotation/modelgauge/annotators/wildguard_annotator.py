@@ -40,6 +40,13 @@ class HuggingFaceConfig(BaseModel):
     inference_endpoint_name: str
     api_key: str
 
+    def is_valid(self) -> bool:
+        return (
+            self.name != ""
+            and self.inference_endpoint_name != ""
+            and self.api_key != ""
+        )
+
 
 class WildguardResponse(BaseModel):
     harmful_request: bool
@@ -48,19 +55,25 @@ class WildguardResponse(BaseModel):
 
 
 WILDGUARD_ANNOTATOR_CONFIG = HuggingFaceConfig(
-    api_key=os.getenv("HF_TOKEN", None),
+    api_key=os.getenv("HF_TOKEN", ""),
     name="wildguard",
     inference_endpoint_name="wildguard-test-ws3",
 )
 
 
 class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
-    def __init__(self, uid, hf_endpoint_name):
+    def __init__(
+        self,
+        uid,
+        hf_endpoint_name,
+        config: HuggingFaceConfig = WILDGUARD_ANNOTATOR_CONFIG,
+    ):
         super().__init__(uid)
 
-        # TODO: move this to HuggingFaceConfig
-        if os.getenv("HF_TOKEN", "") == "":
-            raise Exception("HF_TOKEN must be set")
+        assert (
+            config.is_valid()
+        ), "The configuration is missing a name, key, or endpoint."
+
         # TODO: use HuggingFaceConfig to initialize WildguardAnnotator objects rather than the endpoint name
         endpoint = get_inference_endpoint(hf_endpoint_name)
 
