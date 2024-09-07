@@ -55,7 +55,9 @@ class WildguardResponse(BaseModel):
 
 
 WILDGUARD_ANNOTATOR_CONFIG = HuggingFaceConfig(
-    api_key=os.getenv("HF_TOKEN", ""),
+    api_key=os.getenv(
+        "HF_TOKEN", ""
+    ),  # this can be used for dev/testing; the modelgauge client injects it from secrets
     name="wildguard",
     inference_endpoint_name="wildguard-test-ws3",
 )
@@ -65,7 +67,6 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
     def __init__(
         self,
         uid,
-        hf_endpoint_name,
         config: HuggingFaceConfig = WILDGUARD_ANNOTATOR_CONFIG,
     ):
         super().__init__(uid)
@@ -74,8 +75,7 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             config.is_valid()
         ), "The configuration is missing a name, key, or endpoint."
 
-        # TODO: use HuggingFaceConfig to initialize WildguardAnnotator objects rather than the endpoint name
-        endpoint = get_inference_endpoint(hf_endpoint_name)
+        endpoint = get_inference_endpoint(config.inference_endpoint_name)
 
         if endpoint.status == InferenceEndpointStatus.RUNNING:
             # nothing to do
@@ -86,7 +86,6 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             or endpoint.status == InferenceEndpointStatus.INITIALIZING
             or endpoint.status == InferenceEndpointStatus.UPDATING
         ):
-            pass
             # wait for a given time
             TIMEOUT_SECONDS = 60 * 6
             print(
@@ -96,6 +95,7 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             endpoint.wait(TIMEOUT_SECONDS)
             end_time = time.time()
             elapsed = end_time - start_time
+            # TODO: ensure it actually worked
             print(f"Endpoint started. Waited {elapsed}s")
         elif endpoint.status == InferenceEndpointStatus.SCALED_TO_ZERO:
             timeout_s = 60 * 6
@@ -106,6 +106,7 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             endpoint.wait(timeout_s)
             end_time = time.time()
             elapsed = end_time - start_time
+            # TODO: ensure it actually worked
             print(f"Endpoint started. Waited {elapsed}s")
         else:
             # TODO add auto resume code here (unless it's better to make sure that someone authorized actually spun up the server)
