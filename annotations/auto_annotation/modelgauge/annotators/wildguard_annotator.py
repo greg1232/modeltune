@@ -95,7 +95,6 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             endpoint.wait(TIMEOUT_SECONDS)
             end_time = time.time()
             elapsed = end_time - start_time
-            # TODO: ensure it actually worked
             print(f"Endpoint started. Waited {elapsed}s")
         elif endpoint.status == InferenceEndpointStatus.SCALED_TO_ZERO:
             timeout_s = 60 * 6
@@ -106,7 +105,6 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             endpoint.wait(timeout_s)
             end_time = time.time()
             elapsed = end_time - start_time
-            # TODO: ensure it actually worked
             print(f"Endpoint started. Waited {elapsed}s")
         else:
             # TODO add auto resume code here (unless it's better to make sure that someone authorized actually spun up the server)
