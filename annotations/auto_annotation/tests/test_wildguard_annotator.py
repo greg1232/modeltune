@@ -9,7 +9,10 @@ from huggingface_hub import (
 )
 
 from modelgauge.annotator import PromptWithContext, SUTCompletion
-from modelgauge.annotators.wildguard_annotator import WildguardAnnotator
+from modelgauge.annotators.wildguard_annotator import (
+    HuggingFaceConfig,
+    WildguardAnnotator,
+)
 from modelgauge.safety_model_response import SafetyModelResponse
 from modelgauge.single_turn_prompt_response import TextPrompt
 
@@ -47,9 +50,11 @@ def mock_wildguard_annotator(mock_get_inference_endpoint):
     mock_endpoint.client = Mock()
     mock_get_inference_endpoint.return_value = mock_endpoint
 
-    annotator = WildguardAnnotator(
-        uid="fake_uid", hf_endpoint_name="fake_endpoint_name"
+    fake_config = HuggingFaceConfig(
+        name="fake", inference_endpoint_name="fake", api_key="fake"
     )
+
+    annotator = WildguardAnnotator(uid="fake_uid", config=fake_config)
     annotator.client = mock_endpoint.client
 
     return annotator

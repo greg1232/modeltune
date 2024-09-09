@@ -32,20 +32,50 @@ Answers: [/INST]
 """
 
 
+class HuggingFaceConfig(BaseModel):
+    """This is to unify the use of XXConfig objects across annotators,
+    for easier integration with modelgauge"""
+
+    name: str
+    inference_endpoint_name: str
+    api_key: str
+
+    def is_valid(self) -> bool:
+        return (
+            self.name != ""
+            and self.inference_endpoint_name != ""
+            and self.api_key != ""
+        )
+
+
 class WildguardResponse(BaseModel):
     harmful_request: bool
     response_refusal: bool
     harmful_response: bool
 
 
+WILDGUARD_ANNOTATOR_CONFIG = HuggingFaceConfig(
+    api_key=os.getenv(
+        "HF_TOKEN", ""
+    ),  # this can be used for dev/testing; the modelgauge client injects it from secrets
+    name="wildguard",
+    inference_endpoint_name="wildguard-test-ws3",
+)
+
+
 class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
-    def __init__(self, uid, hf_endpoint_name):
+    def __init__(
+        self,
+        uid,
+        config: HuggingFaceConfig = WILDGUARD_ANNOTATOR_CONFIG,
+    ):
         super().__init__(uid)
 
-        if os.getenv("HF_TOKEN", "") == "":
-            raise Exception("HF_TOKEN must be set")
+        assert (
+            config.is_valid()
+        ), "The configuration is missing a name, key, or endpoint."
 
-        endpoint = get_inference_endpoint(hf_endpoint_name)
+        endpoint = get_inference_endpoint(config.inference_endpoint_name)
 
         if endpoint.status == InferenceEndpointStatus.RUNNING:
             # nothing to do
@@ -56,7 +86,6 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             or endpoint.status == InferenceEndpointStatus.INITIALIZING
             or endpoint.status == InferenceEndpointStatus.UPDATING
         ):
-            pass
             # wait for a given time
             TIMEOUT_SECONDS = 60 * 6
             print(
@@ -177,5 +206,8 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
         )
 
 
-HF_INFERENCE_ENDPOINT_NAME = "wildguard-test-ws3"
-ANNOTATORS.register(WildguardAnnotator, "wildguard", HF_INFERENCE_ENDPOINT_NAME)
+ANNOTATORS.register(
+    WildguardAnnotator,
+    WILDGUARD_ANNOTATOR_CONFIG.name,
+    WILDGUARD_ANNOTATOR_CONFIG.inference_endpoint_name,
+)
