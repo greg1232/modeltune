@@ -82,6 +82,10 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             self._client = self.connect()
         return self._client
 
+    @client.setter
+    def client(self, c):
+        self._client = c
+
     def connect(self):
         endpoint = get_inference_endpoint(
             self.config.inference_endpoint_name, token=self.config.api_key
