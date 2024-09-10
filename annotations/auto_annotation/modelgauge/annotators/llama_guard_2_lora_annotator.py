@@ -107,6 +107,7 @@ class LlamaGuard2LoRAAnnotator(CompletionAnnotator[SafetyModelResponse]):
                     safety_categories=[],
                     is_valid=True,
                     logprobs=logprobs,
+                    raw_response=response_text,
                 )
             # Get categories if unsafe
             elif safe_unsafe_str == "unsafe":
@@ -122,6 +123,7 @@ class LlamaGuard2LoRAAnnotator(CompletionAnnotator[SafetyModelResponse]):
                     safety_categories=categories,
                     is_valid=True,
                     logprobs=logprobs,
+                    raw_response=response_text,
                 )
 
             else:
@@ -138,6 +140,7 @@ class LlamaGuard2LoRAAnnotator(CompletionAnnotator[SafetyModelResponse]):
                 is_safe=False,
                 safety_categories=[],
                 is_valid=False,
+                raw_response=response_text,
             )
 
     def _single_turn_llama_guard_2_prompt_builder(

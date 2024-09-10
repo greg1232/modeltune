@@ -133,6 +133,7 @@ def test_translate_response_well_formatted():
         reasoning="nothing to see here",
         is_valid=True,
         total_tokens_used=response.usage.total_tokens,
+        raw_response=response_json_str,
     )
 
     assert result.model_dump_json() == expected_result.model_dump_json()
@@ -157,6 +158,7 @@ def test_translate_response_with_error():
         is_safe=False,
         safety_categories=[],
         is_valid=False,
+        raw_response=bogus_response,
     )
 
     assert result.model_dump_json() == expected_result.model_dump_json()

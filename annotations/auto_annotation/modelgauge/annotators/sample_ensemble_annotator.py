@@ -13,7 +13,21 @@ from modelgauge.annotators.prompt_engineered_annotator import PromptEngineeredAn
 from modelgauge.prompt import ChatMessage, ChatPrompt, ChatRole
 from modelgauge.safety_model_constants import DEFAULT_MINIMAL_SAFETY_CATEGORIES
 
+# Update the following endpoint to point to the deployed vllm
+DEPLOYED_VLLM_ENDPOINT_URL = "http://evaluator.dev.modelmodel.org:8000/v1"
+# This value is NOT arbitrary. The docker image sets this value
+DEPLOYED_LORA_MODEL_NAME = "llamaguard-lora"
+
+vllm_config = LlamaGuard2LoRAConfig(
+    name="vllm",
+    model=DEPLOYED_LORA_MODEL_NAME,
+    base_url=DEPLOYED_VLLM_ENDPOINT_URL,
+    api_key=os.getenv("VLLM_LOCAL_API_KEY", ""),
+    safety_categories=DEFAULT_MINIMAL_SAFETY_CATEGORIES,
+)
+
 a1 = PromptEngineeredAnnotator(MISTRAL_8x22B_CONFIG.name, MISTRAL_8x22B_CONFIG)
 a2 = PromptEngineeredAnnotator(LLAMA_3_70B_CONFIG.name, LLAMA_3_70B_CONFIG)
+a3 = LlamaGuard2LoRAAnnotator(vllm_config.name, vllm_config)
 
-ANNOTATORS.register(EnsembleAnnotator, "ensemble", [a1, a2])
+ANNOTATORS.register(EnsembleAnnotator, "ensemble", [a1, a2, a3])

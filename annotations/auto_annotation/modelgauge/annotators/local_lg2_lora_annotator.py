@@ -10,7 +10,7 @@ from modelgauge.safety_model_constants import DEFAULT_MINIMAL_SAFETY_CATEGORIES
 # Arbitrary name to register annotator with modelgauge
 MODELGAUGE_ANNOTATOR_NAME = "local-lg2-lora"
 # Update the following endpoint to point to the deployed vllm
-DEPLOYED_VLLM_ENDPOINT_URL = "http://localhost:8000/v1"
+DEPLOYED_VLLM_ENDPOINT_URL = "http://evaluator.dev.modelmodel.org:8000/v1 "
 # This value is NOT arbitrary. The docker image sets this value
 DEPLOYED_LORA_MODEL_NAME = "llamaguard-lora"
 

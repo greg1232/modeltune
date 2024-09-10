@@ -83,7 +83,8 @@ def test_translate_request():
 def test_translate_safe_response():
     annotator = _fake_annotator()
 
-    response = _make_fake_openai_completion("safe")
+    response_text = "safe"
+    response = _make_fake_openai_completion(response_text)
 
     result = annotator.translate_response(None, response)
 
@@ -93,6 +94,7 @@ def test_translate_safe_response():
         is_valid=True,
         # Faking the logprobs here, not actually validating them
         logprobs=Logprobs(),
+        raw_response=response_text,
     )
 
     assert result.model_dump_json() == expected_result.model_dump_json()
@@ -101,7 +103,8 @@ def test_translate_safe_response():
 def test_translate_unsafe_response():
     annotator = _fake_annotator()
 
-    response = _make_fake_openai_completion("unsafe\nS1,S2")
+    response_text = "unsafe\nS1,S2"
+    response = _make_fake_openai_completion(response_text)
 
     result = annotator.translate_response(None, response)
 
@@ -111,6 +114,7 @@ def test_translate_unsafe_response():
         is_valid=True,
         # Faking the logprobs here, not actually validating them
         logprobs=Logprobs(),
+        raw_response=response_text,
     )
 
     assert result.model_dump_json() == expected_result.model_dump_json()
@@ -125,9 +129,7 @@ def test_bogus_model_response():
     result = annotator.translate_response(None, response)
 
     expected_result = SafetyModelResponse(
-        is_safe=False,
-        safety_categories=[],
-        is_valid=False,
+        is_safe=False, safety_categories=[], is_valid=False, raw_response=bogus_response
     )
 
     assert result.model_dump_json() == expected_result.model_dump_json()

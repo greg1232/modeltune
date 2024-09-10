@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -9,6 +9,7 @@ class SafetyModelResponse(BaseModel):
     is_safe: bool
     safety_categories: List[str]
     is_valid: bool = True
+    raw_input: Optional[str] = None
     raw_response: Optional[str] = None
     reasoning: Optional[str] = None
     total_tokens_used: Optional[float] = None
@@ -24,5 +25,6 @@ class EnsembleSafetyModelResponse(SafetyModelResponse):
     **is_unanimous**: Whether or not the is_safe votes were unanimous
     """
 
+    # FIXME, update to reference name of safety model as the key: joined_responses: Dict[str, SafetyModelResponse]
     joined_responses: List[SafetyModelResponse]
     is_unanimous: bool

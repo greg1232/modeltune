@@ -142,6 +142,7 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
             response_json = json.loads(response_text)
             result = SafetyModelResponse(**response_json)
             result.total_tokens_used = response.usage.total_tokens
+            result.raw_response = response_text
             return result
         except Exception as e:
             print(f"Error parsing response JSON: {e}")
@@ -149,4 +150,5 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
                 is_safe=False,
                 safety_categories=[],
                 is_valid=False,
+                raw_response=response_text,
             )
