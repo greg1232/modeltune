@@ -75,7 +75,9 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             config.is_valid()
         ), "The configuration is missing a name, key, or endpoint."
 
-        endpoint = get_inference_endpoint(config.inference_endpoint_name, token=config.api_key)
+        endpoint = get_inference_endpoint(
+            config.inference_endpoint_name, token=config.api_key
+        )
 
         if endpoint.status == InferenceEndpointStatus.RUNNING:
             # nothing to do
