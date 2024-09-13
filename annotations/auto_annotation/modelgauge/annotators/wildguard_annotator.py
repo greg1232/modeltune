@@ -70,23 +70,35 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
         config: HuggingFaceConfig = WILDGUARD_ANNOTATOR_CONFIG,
     ):
         super().__init__(uid)
-
         assert (
             config.is_valid()
         ), "The configuration is missing a name, key, or endpoint."
+        self.config = config
+        self._client = None
 
+    @property
+    def client(self):
+        if not self._client:
+            self._client = self.connect()
+        return self._client
+
+    @client.setter
+    def client(self, c):
+        self._client = c
+
+    def connect(self):
         endpoint = get_inference_endpoint(
-            config.inference_endpoint_name, token=config.api_key
+            self.config.inference_endpoint_name, token=self.config.api_key
         )
 
         if endpoint.status == InferenceEndpointStatus.RUNNING:
             # nothing to do
             print("Endpoint is running. Continuing...")
             pass
-        elif (
-            endpoint.status == InferenceEndpointStatus.PENDING
-            or endpoint.status == InferenceEndpointStatus.INITIALIZING
-            or endpoint.status == InferenceEndpointStatus.UPDATING
+        elif endpoint.status in (
+            InferenceEndpointStatus.PENDING,
+            InferenceEndpointStatus.INITIALIZING,
+            InferenceEndpointStatus.UPDATING,
         ):
             # wait for a given time
             TIMEOUT_SECONDS = 60 * 6
@@ -114,7 +126,8 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
                 "Endpoint is not running: Please contact admin to ensure endpoint is starting or running"
             )
 
-        self.client = endpoint.client
+        self._client = endpoint.client
+        return self._client
 
     def translate_request(self, prompt: PromptWithContext, completion: SUTCompletion):
         """Translates a given prompt and completion into a default wildguard formatted request string"""
