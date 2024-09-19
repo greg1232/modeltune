@@ -1,6 +1,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 """ Inference script for LLama Guard Family """
+"""python inference/infer.py --dataset_name mlc-1320 --variant_type mlc \
+--finetuned_model_path <finetuned_model_path> --model_type lg3"""
+
 import argparse
 import datetime
 
