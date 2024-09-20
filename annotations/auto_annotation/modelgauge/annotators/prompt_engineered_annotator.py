@@ -48,6 +48,7 @@ class OpenAIModelConfig(BaseLLMConfig):
 
 class PromptEngineeredAnnotatorConfig(BaseModel):
     name: str
+    description: str
     # FIXME - in the future, model_config should be a union eg Union[ConfigA, ConfigB]
     llm_config: Union[TogetherModelConfig, OpenAIModelConfig]
     labeler_system_prompt: str
