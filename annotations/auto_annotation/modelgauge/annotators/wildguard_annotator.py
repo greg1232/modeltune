@@ -38,13 +38,11 @@ class HuggingFaceConfig(BaseModel):
 
     name: str
     inference_endpoint_name: str
-    api_key: str
+    token: str
 
     def is_valid(self) -> bool:
         return (
-            self.name != ""
-            and self.inference_endpoint_name != ""
-            and self.api_key != ""
+            self.name != "" and self.inference_endpoint_name != "" and self.token != ""
         )
 
 
@@ -55,11 +53,11 @@ class WildguardResponse(BaseModel):
 
 
 WILDGUARD_ANNOTATOR_CONFIG = HuggingFaceConfig(
-    api_key=os.getenv(
-        "HF_TOKEN", ""
-    ),  # this can be used for dev/testing; the modelgauge client injects it from secrets
     name="wildguard",
     inference_endpoint_name="wildguard-test-ws3",
+    token=os.getenv(
+        "HF_TOKEN", ""
+    ),  # this can be used for dev/testing; the modelgauge client injects it from secrets
 )
 
 
@@ -72,7 +70,7 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
         super().__init__(uid)
         assert (
             config.is_valid()
-        ), "The configuration is missing a name, key, or endpoint."
+        ), "The configuration is missing a name, token, or endpoint."
         self.config = config
         self._client = None
 
@@ -88,7 +86,7 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
 
     def connect(self):
         endpoint = get_inference_endpoint(
-            self.config.inference_endpoint_name, token=self.config.api_key
+            self.config.inference_endpoint_name, token=self.config.token
         )
 
         if endpoint.status == InferenceEndpointStatus.RUNNING:

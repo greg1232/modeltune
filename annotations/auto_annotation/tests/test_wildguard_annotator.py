@@ -51,7 +51,7 @@ def mock_wildguard_annotator(mock_get_inference_endpoint):
     mock_get_inference_endpoint.return_value = mock_endpoint
 
     fake_config = HuggingFaceConfig(
-        name="fake", inference_endpoint_name="fake", api_key="fake"
+        name="fake", inference_endpoint_name="fake", token="fake"
     )
 
     annotator = WildguardAnnotator(uid="fake_uid", config=fake_config)
