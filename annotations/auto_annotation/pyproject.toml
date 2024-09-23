@@ -21,11 +21,10 @@ pre-commit = "^3.8.0"
 black = "^24.4.2"
 openai = "1.40.3"
 huggingface-hub = "^0.24.6"
-
-[tool.poetry.group.dev.dependencies]
-modelgauge = {path = "../../modelgauge", develop = true}
-modelgauge_openai = {path = "../../modelgauge/plugins/openai", develop = true}
-
+transformers = "^4.44.2"
+modelgauge = "^0.6.3"
+modelgauge-openai = "^0.6.3"
+modelgauge-huggingface = "^0.6.3"
 
 [tool.black]
 target-version = ["py310"]

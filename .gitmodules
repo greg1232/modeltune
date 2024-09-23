@@ -1,3 +1,0 @@
-[submodule "modelgauge"]
-	path = modelgauge
-	url = https://github.com/mlcommons/modelgauge.git
