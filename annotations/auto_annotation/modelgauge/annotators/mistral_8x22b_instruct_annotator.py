@@ -25,8 +25,8 @@ MISTRAL_8x22B_PE_SUTRO_2024_07_01_CONFIG = PromptEngineeredAnnotatorConfig(
     role_to_measure=ASSISTANT_ROLE,
 )
 
-MISTRAL_8x22B_PE_TAMALPAIS_2024_07_01_CONFIG = PromptEngineeredAnnotatorConfig(
-    name="mistral-8x22b.pe.tamalpais.2024-07-01",
+MISTRAL_8x22B_PE_TAMALPAIS_2024_09_09_CONFIG = PromptEngineeredAnnotatorConfig(
+    name="mistral-8x22b.pe.tamalpais.2024-09-09",
     description="Mistral 8x22b model, using the v1.0 September 2024 taxonomy",
     llm_config=TogetherModelConfig(
         path="mistralai/Mixtral-8x22B-Instruct-v0.1",
@@ -45,6 +45,6 @@ ANNOTATORS.register(
 )
 ANNOTATORS.register(
     PromptEngineeredAnnotator,
-    MISTRAL_8x22B_PE_TAMALPAIS_2024_07_01_CONFIG.name,
-    MISTRAL_8x22B_PE_TAMALPAIS_2024_07_01_CONFIG,
+    MISTRAL_8x22B_PE_TAMALPAIS_2024_09_09_CONFIG.name,
+    MISTRAL_8x22B_PE_TAMALPAIS_2024_09_09_CONFIG,
 )
