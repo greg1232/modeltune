@@ -140,7 +140,17 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
 
         # Parse response
         try:
-            response_json = json.loads(response_text)
+            # Clean up the response and isolate the JSON string
+            json_marker = "{"
+            start_index = response_text.index(json_marker)
+            cleaned_str = response_text[start_index:].replace("\n", "")
+            end_index = cleaned_str.rfind("}")
+            if end_index != -1:
+                cleaned_str = cleaned_str[: end_index + 1]
+
+            # Parse the cleaned string
+            response_json = json.loads(cleaned_str)
+
             result = SafetyModelResponse(**response_json)
             result.total_tokens_used = response.usage.total_tokens
             result.raw_response = response_text
