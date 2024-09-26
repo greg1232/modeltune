@@ -222,5 +222,5 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
 ANNOTATORS.register(
     WildguardAnnotator,
     WILDGUARD_ANNOTATOR_CONFIG.name,
-    WILDGUARD_ANNOTATOR_CONFIG.inference_endpoint_name,
+    WILDGUARD_ANNOTATOR_CONFIG,
 )
