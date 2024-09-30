@@ -1,4 +1,17 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# Authors: Shaona Ghosh
 
 import argparse
 import json
@@ -212,9 +225,9 @@ if __name__ == "__main__":
 
     assert len(training_examples) != 0, "No training examples to format"
     # Call the create_formatted_finetuning_examples function
-    # formatted_examples = create_formatted_finetuning_examples(
-    #     training_examples, formatter_configs
-    # )
+    formatted_examples = create_formatted_finetuning_examples(
+        training_examples, formatter_configs
+    )
     formatted_examples = mlc_formatter.get_formatted_training_examples(training_examples)
 
     base_filename = os.path.basename(args.file_path)

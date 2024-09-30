@@ -20,6 +20,7 @@ from modelgauge.suts.together_client import (
 def _fake_annotator(role_to_measure=ASSISTANT_ROLE):
     fake_config = PromptEngineeredAnnotatorConfig(
         name="test_annotator",
+        description="",
         llm_config=TogetherModelConfig(
             path="fake/path",
             api_key=TogetherApiKey("fake_key"),
