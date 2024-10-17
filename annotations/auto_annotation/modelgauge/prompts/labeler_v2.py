@@ -58,7 +58,7 @@ Output JSON format:
 }}
 """
 
-LABELER_USER_PROMPT_V1 = """
+LABELER_USER_PROMPT_V2 = """
 Sample conversation: {messages}
 
 Provide your assessment for ONLY THE LAST {role_to_measure} message in the above conversation:
