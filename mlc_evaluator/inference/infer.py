@@ -295,6 +295,7 @@ def moderate_chat(chat, model, tokenizer, model_type):
             pad_token_id=0,
             output_scores=True,
             return_dict_in_generate=True,
+            temperature = 0
         )
         prompt_len = inputs["input_ids"].shape[-1]
         logprobs = torch.log_softmax(output.scores[0], dim=-1)
@@ -491,7 +492,7 @@ def test_inference(base_model_and_tokenizer, eval_str):
     valid_test = True
     if is_safe.startswith("unsafe"):
         res = "unsafe"
-        re_matches = re.findall(r"unsafe\s*(S\d{1,2})\b", pred)
+        re_matches = re.findall(r"S\d{1,2}", pred)
         if len(re_matches) < 1:
             print(f"Error in parsing the category from the prediction: {pred}")
             violated_categories = []
