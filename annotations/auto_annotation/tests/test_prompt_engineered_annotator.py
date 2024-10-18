@@ -36,6 +36,19 @@ def _fake_annotator(role_to_measure=ASSISTANT_ROLE):
     return fake_annotator
 
 
+def _fake_request():
+    request = TogetherChatRequest(
+        model="fake_model_path",
+        messages=[
+            TogetherChatRequest.Message(role=SYSTEM_ROLE, content="fake system prompt"),
+            TogetherChatRequest.Message(role=USER_ROLE, content="fake user prompt"),
+        ],
+        max_tokens=100,
+        n=1,
+    )
+    return request
+
+
 def test_translate_request_text_prompt():
     annotator = _fake_annotator()
 
@@ -126,10 +139,12 @@ def test_translate_response_well_formatted():
         )
     ]
 
-    result = annotator.translate_response(None, response)
+    fake_request = _fake_request()
+    result = annotator.translate_response(fake_request, response)
 
     expected_result = SafetyModelResponse(
         is_safe=True,
+        raw_input=fake_request.model_dump_json(),
         safety_categories=[],
         reasoning="nothing to see here",
         is_valid=True,
@@ -153,10 +168,12 @@ def test_translate_response_with_error():
         )
     ]
 
-    result = annotator.translate_response(None, response)
+    fake_request = _fake_request()
+    result = annotator.translate_response(fake_request, response)
 
     expected_result = SafetyModelResponse(
         is_safe=False,
+        raw_input=fake_request.model_dump_json(),
         safety_categories=[],
         is_valid=False,
         raw_response=bogus_response,

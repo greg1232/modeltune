@@ -152,6 +152,7 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
             response_json = json.loads(cleaned_str)
 
             result = SafetyModelResponse(**response_json)
+            result.raw_input = request.model_dump_json()
             result.total_tokens_used = response.usage.total_tokens
             result.raw_response = response_text
             return result
@@ -161,5 +162,6 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
                 is_safe=False,
                 safety_categories=[],
                 is_valid=False,
+                raw_input=request.model_dump_json(),
                 raw_response=response_text,
             )

@@ -101,11 +101,13 @@ def test_translate_response(raw_response, expected_is_safe, mock_wildguard_annot
     fake_response = TextGenerationOutput(generated_text=raw_response, details=Mock())
     fake_response.details.tokens = fake_tokens
 
+    fake_request = "fake request"
     result = mock_wildguard_annotator.translate_response(
-        request=Mock(), response=fake_response
+        request=fake_request, response=fake_response
     )
     expected_response = SafetyModelResponse(
         is_safe=expected_is_safe,
+        raw_input=fake_request,
         safety_categories=[],
         raw_response=raw_response,
         logprobs=fake_tokens,

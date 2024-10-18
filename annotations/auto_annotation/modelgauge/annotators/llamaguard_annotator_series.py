@@ -29,10 +29,12 @@ class LlamaGuardAnnotation(BaseModel):
 
 def convert_llamaguard_to_safetyResponse(
     guard_annotation: LlamaGuardAnnotation,
+    raw_input: str,
 ) -> SafetyModelResponse:
     return SafetyModelResponse(
         is_safe=guard_annotation.is_safe,
         safety_categories=guard_annotation.violation_categories,
+        raw_input=raw_input,
     )
 
 
@@ -378,7 +380,7 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
 
     def translate_response(
         self, request: TogetherCompletionsRequest, response: TogetherCompletionsResponse
-    ) -> LlamaGuardAnnotation:
+    ) -> SafetyModelResponse:
         assert len(response.choices) == 1
         together_response = response.choices[0]
         lines = together_response.text.split()
@@ -400,7 +402,8 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
             return convert_llamaguard_to_safetyResponse(
                 LlamaGuardAnnotation(
                     is_safe=True, is_safe_logprob=logprob, violation_categories=[]
-                )
+                ),
+                raw_input=request.model_dump_json(),
             )
         elif lines[0] == "unsafe":
             decoder = (
@@ -417,7 +420,8 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
                     is_safe=False,
                     is_safe_logprob=logprob,
                     violation_categories=categories,
-                )
+                ),
+                raw_input=request.model_dump_json(),
             )
         else:
             raise AssertionError("Unexpected response: ", together_response.text)

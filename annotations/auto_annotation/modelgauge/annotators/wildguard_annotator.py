@@ -203,6 +203,7 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
                 is_safe=False,
                 is_valid=False,
                 safety_categories=[],
+                raw_input=request,
                 raw_response=response.generated_text,
             )
 
@@ -211,6 +212,7 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             is_safe=harmful_response == False,
             # Wildguard doesn't have safety categories
             safety_categories=[],
+            raw_input=request,
             raw_response=response.generated_text,
             logprobs=response.details.tokens if response.details else None,
             is_valid=True,
