@@ -124,6 +124,9 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
             )
         )
 
+        # Logprobs are only added to response if present in the request
+        request.logprobs = True
+
         return request
 
     def annotate(self, annotation_request):
@@ -135,7 +138,6 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
         self, request: TogetherChatRequest, response: TogetherChatResponse
     ) -> SafetyModelResponse:
         """Convert the raw response into the form read by Tests."""
-
         response_text = response.choices[0].message.content
 
         # Parse response
@@ -155,6 +157,7 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
             result.raw_input = request.model_dump_json()
             result.total_tokens_used = response.usage.total_tokens
             result.raw_response = response_text
+            result.logprobs = response.choices[0].logprobs
             return result
         except Exception as e:
             print(f"Error parsing response JSON: {e}")

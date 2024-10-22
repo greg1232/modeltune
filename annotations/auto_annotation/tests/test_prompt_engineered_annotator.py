@@ -78,6 +78,7 @@ def test_translate_request_text_prompt():
             ),
         ],
         max_tokens=annotator.config.llm_config.max_tokens,
+        logprobs=True,
         n=1,
     )
 
@@ -118,6 +119,7 @@ def test_translate_request_chat_prompt():
             ),
         ],
         max_tokens=annotator.config.llm_config.max_tokens,
+        logprobs=True,
         n=1,
     )
 
