@@ -14,7 +14,7 @@
 # Authors: Shaona Ghosh
 
 """ Inference script for LLama Guard Family """
-""" Nnote: Provide full path to the finetuned model path so as to save results in a specific directory"""
+""" Note: Provide full path to the finetuned model path so as to save results in a specific directory"""
 """python inference/infer.py --dataset_name mlc-1320 --variant_type mlc \
 --finetuned_model_path <finetuned_model_path> --model_type lg3"""
 
@@ -37,6 +37,7 @@ from sklearn.metrics import (
     recall_score,
     accuracy_score,
     confusion_matrix,
+    f1_score
 )
 
 import sys
@@ -295,7 +296,7 @@ def moderate_chat(chat, model, tokenizer, model_type):
             pad_token_id=0,
             output_scores=True,
             return_dict_in_generate=True,
-            temperature = 0
+            temperature = 0, #no randomness
         )
         prompt_len = inputs["input_ids"].shape[-1]
         logprobs = torch.log_softmax(output.scores[0], dim=-1)
@@ -424,6 +425,8 @@ def eval_dataset(base_model_and_tokenizer, finetuned_model_id):
     false_safe_rate_v1 = fn_v1 / (tp_v1 + fn_v1)
     false_unsafe_rate_v1 = fp_v1 / (fp_v1 + tn_v1)
     negative_predictive_value_v1 = tn_v1 / (tn_v1 + fn_v1)
+    f1 = f1_score(gt, pred)
+    f1_v1 = f1_score(gt_v_1, pred_v_1)
 
     eval_metrics.append({"index":"overall",
     "Precision": precision_score(gt, pred, average="weighted"),
@@ -432,7 +435,8 @@ def eval_dataset(base_model_and_tokenizer, finetuned_model_id):
     "acc": accuracy_score(gt, pred),
     "FSR": false_safe_rate,
     "FUR": false_unsafe_rate,
-    "NPV": negative_predictive_value
+    "NPV": negative_predictive_value,
+    "f1-score": f1
     })
 
     eval_metrics_v1.append({"index":"overall",
@@ -442,7 +446,8 @@ def eval_dataset(base_model_and_tokenizer, finetuned_model_id):
     "acc": accuracy_score(gt_v_1, pred_v_1),
     "FSR": false_safe_rate_v1,
     "FUR": false_unsafe_rate_v1,
-    "NPV": negative_predictive_value_v1
+    "NPV": negative_predictive_value_v1,
+    "f1-score": f1_v1
     })
 
     current_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -581,7 +586,7 @@ if __name__ == "__main__":
 
     dataset_name = args.dataset_name
     finetuned_model_path = args.finetuned_model_path
-    finetuned_model_id = finetuned_model_path.split('/')[-1]
+    finetuned_model_id = os.path.basename(os.path.normpath(finetuned_model_path))
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16
