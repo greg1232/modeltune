@@ -418,10 +418,12 @@ def eval_dataset(base_model_and_tokenizer, finetuned_model_id):
     tn, fp, fn, tp = confusion_matrix(gt, pred).ravel()
     tn_v1, fp_v1, fn_v1, tp_v1 = confusion_matrix(gt_v_1, pred_v_1).ravel()
 
+    false_ommision_rate = fn / (fn + tn)
     false_safe_rate = fn / (tp + fn)
     false_unsafe_rate = fp / (fp + tn)
     negative_predictive_value = tn / (tn + fn)
 
+    false_ommision_rate_v1 = fn_v1 / (fn_v1 + tn_v1)
     false_safe_rate_v1 = fn_v1 / (tp_v1 + fn_v1)
     false_unsafe_rate_v1 = fp_v1 / (fp_v1 + tn_v1)
     negative_predictive_value_v1 = tn_v1 / (tn_v1 + fn_v1)
@@ -436,7 +438,8 @@ def eval_dataset(base_model_and_tokenizer, finetuned_model_id):
     "FSR": false_safe_rate,
     "FUR": false_unsafe_rate,
     "NPV": negative_predictive_value,
-    "f1-score": f1
+    "f1-score": f1,
+    "FOR": false_ommision_rate
     })
 
     eval_metrics_v1.append({"index":"overall",
@@ -447,7 +450,8 @@ def eval_dataset(base_model_and_tokenizer, finetuned_model_id):
     "FSR": false_safe_rate_v1,
     "FUR": false_unsafe_rate_v1,
     "NPV": negative_predictive_value_v1,
-    "f1-score": f1_v1
+    "f1-score": f1_v1,
+    "FOR": false_ommision_rate_v1
     })
 
     current_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
