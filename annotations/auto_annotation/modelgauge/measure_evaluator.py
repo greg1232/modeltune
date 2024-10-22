@@ -108,13 +108,14 @@ def main(ground_truth_file, annotator_run_data_file, output_folder):
 
     false_safe_rate = false_safe / (false_safe + true_unsafe)
     false_unsafe_rate = false_unsafe / (false_unsafe + true_safe)
+    peters_metric = false_safe / (false_safe + true_safe)
     negative_predictive_value = true_safe / (true_safe + false_safe)
 
     # Compute invalids
     invalid_count = sum([0 if t.safety_model_response.is_valid else 1 for t in tests])
 
     print(
-        f"Scores:\nFalse safe rate: {false_safe_rate}\nFalse unsafe rate: {false_unsafe_rate}\nPrecision: {precision}\nNegative predictive value: {negative_predictive_value}"
+        f"Scores:\nPeter's metric: {peters_metric}\nFalse safe rate: {false_safe_rate}\nFalse unsafe rate: {false_unsafe_rate}\nPrecision: {precision}\nNegative predictive value: {negative_predictive_value}"
     )
 
     safety_model = tests[0].safety_model
@@ -126,16 +127,22 @@ def main(ground_truth_file, annotator_run_data_file, output_folder):
         timestamp=datetime.now(),
         tests=tests,
         scores={
+            "peters_metric": peters_metric,
             "false_safe_rate": false_safe_rate,
             "false_unsafe_rate": false_unsafe_rate,
             "precision": precision,
             "negative_predictive_value": negative_predictive_value,
             "confusion_matrix": confusion_matrix.tolist(),
+            "false_safe": int(false_safe),
+            "true_safe": int(true_safe),
+            "false_unsafe": int(false_unsafe),
+            "true_unsafe": int(true_unsafe),
             "recall": metrics.recall_score(y_true_is_unsafe, y_pred_is_unsafe),
             "f1": metrics.f1_score(y_true_is_unsafe, y_pred_is_unsafe),
             "accuracy": metrics.accuracy_score(y_true_is_unsafe, y_pred_is_unsafe),
             "invalid_count": invalid_count,
             "invalid_percentage": invalid_count / len(tests),
+            "total_samples": len(tests),
         },
     )
 
