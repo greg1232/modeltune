@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 import click
+import pandas as pd
 from pydantic import BaseModel
 from sklearn import metrics
 
@@ -74,6 +75,57 @@ class SafetyModelMeasurementRun(BaseModel):
     tests: List[SafetyModelTestCase]
     # TODO what we doing with scores? a class? or just dictionary
     scores: Dict[str, Any]
+
+    @classmethod
+    def from_json_file(cls, path: str):
+        """Load Safety Model Measurement run from a compatible json output file"""
+        with open(path, "r") as f:
+            data = json.load(f)
+
+        return cls.model_validate(data)
+
+    def get_false_safes(self):
+        """Extract and return all false safe test cases"""
+        false_safe_samples = list(
+            filter(
+                lambda x: x.ground_truth.ground_truth.is_safe == False
+                and x.safety_model_response.is_safe == True,
+                self.tests,
+            )
+        )
+        return false_safe_samples
+
+    def get_false_unsafes(self):
+        """Extract and return all false unsafe test cases"""
+        false_unsafe_samples = list(
+            filter(
+                lambda x: x.ground_truth.ground_truth.is_safe == True
+                and x.safety_model_response.is_safe == False,
+                self.tests,
+            )
+        )
+        return false_unsafe_samples
+
+    def get_invalids(self):
+        """Extract and return all invalid test cases"""
+        invalids = list(
+            filter(lambda x: x.safety_model_response.is_valid == False, self.tests)
+        )
+        return invalids
+
+    def tests_to_csv(self, tests: List[SafetyModelTestCase], output_path: str):
+        """Dump tests to csv format"""
+        # Convert tests to just plain dict (or json)
+        tests_as_dicts = list(map(lambda t: t.model_dump(), tests))
+
+        # Load into dataframe
+        df = pd.DataFrame.from_dict(tests_as_dicts)
+
+        # TODO
+        # You have the columns now but it's not flattened. E.g. ground truth and safety model annotations are still json blocks. Might be worthwhile to flatten them?
+        # Optionally you could just extract the key items and create a flat dict manually here
+
+        df.to_csv(output_path, index=False)
 
 
 @click.command()
