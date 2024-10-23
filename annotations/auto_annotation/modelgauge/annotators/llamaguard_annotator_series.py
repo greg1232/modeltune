@@ -34,6 +34,7 @@ def convert_llamaguard_to_safetyResponse(
     return SafetyModelResponse(
         is_safe=guard_annotation.is_safe,
         safety_categories=guard_annotation.violation_categories,
+        logprobs=guard_annotation.is_safe_logprob,
         raw_input=raw_input,
     )
 
