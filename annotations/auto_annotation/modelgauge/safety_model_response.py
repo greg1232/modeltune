@@ -26,5 +26,5 @@ class EnsembleSafetyModelResponse(SafetyModelResponse):
     """
 
     # FIXME, update to reference name of safety model as the key: joined_responses: Dict[str, SafetyModelResponse]
-    joined_responses: List[SafetyModelResponse]
+    joined_responses: Dict[str, SafetyModelResponse]
     is_unanimous: bool

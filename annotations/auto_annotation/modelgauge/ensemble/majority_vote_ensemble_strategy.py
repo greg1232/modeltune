@@ -31,7 +31,7 @@ class MajorityVoteEnsembleStrategy(EnsembleStrategy):
                 is_safe=False,
                 safety_categories=[],
                 is_valid=False,
-                joined_responses=list(annotations.values()),
+                joined_responses=annotations,
                 is_unanimous=False,
             )
 
@@ -59,6 +59,6 @@ class MajorityVoteEnsembleStrategy(EnsembleStrategy):
             is_safe=is_safe,
             safety_categories=list(safety_categories),
             is_valid=True,
-            joined_responses=list(annotations.values()),
+            joined_responses=annotations,
             is_unanimous=is_unanimous,
         )

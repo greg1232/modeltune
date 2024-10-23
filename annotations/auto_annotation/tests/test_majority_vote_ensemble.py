@@ -22,9 +22,7 @@ def test_ensemble_join_response_safe():
         is_safe=True,
         safety_categories=[],
         is_valid=True,
-        joined_responses=list(
-            fake_responses.values()
-        ),  # Not testing for joined response metadata behavior here. Will test in separate test
+        joined_responses=fake_responses,  # Not testing for joined response metadata behavior here. Will test in separate test
         is_unanimous=True,
     )
 
@@ -51,9 +49,7 @@ def test_ensemble_join_response_unsafe():
         is_safe=False,
         safety_categories=["category1", "category2"],
         is_valid=True,
-        joined_responses=list(
-            fake_responses.values()
-        ),  # Not testing for joined response metadata behavior here. Will test in separate test
+        joined_responses=fake_responses,  # Not testing for joined response metadata behavior here. Will test in separate test
         is_unanimous=False,
     )
 
@@ -80,9 +76,7 @@ def test_ensemble_join_response_tie():
         is_safe=False,
         safety_categories=["category1"],
         is_valid=True,
-        joined_responses=list(
-            fake_responses.values()
-        ),  # Not testing for joined response metadata behavior here. Will test in separate test
+        joined_responses=fake_responses,  # Not testing for joined response metadata behavior here. Will test in separate test
         is_unanimous=False,
     )
 
