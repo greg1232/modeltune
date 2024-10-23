@@ -5,7 +5,7 @@ This guide will help you prepare an image that can serve our MLC finetuned
 models for inference. We use vLLM to handle inference and start a server
 
 TLDR: What's happening at a high level?
-1. Download the adapter weights
+1. Download the adapter weights (not necessarily from HuggingFace)
 2. Use docker to create a vLLM image with those adapter weights
 3. Run that docker image on GCP or AWS to serve the custom model
 
@@ -22,6 +22,11 @@ Not supported (yet)
 - Llama Guard 3
 
 ## Step 1: Building the image
+TODO where should you be building the image? Should be buildable on any environment (unless nvidia gpu is a requirement... why?)
+TODO instructions on token management: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+TODO instructions on pushing image with token: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
+
+
 ### Building a new image and pushing to MLC registry
 1. Download LoRA adapter weights and copy them into in the `./adapters`
    directory in the same directory as the Dockerfile (at minimum, need the
@@ -31,14 +36,24 @@ Not supported (yet)
 
 Initially the `<IMAGE_NAME>` is `ws3-model-test`.
 ```
-docker build -t ghcr.io/mlcommons/<IMAGE_NAME> --build-arg ADAPTER_DIR=". /adapters" .
+docker build -t ghcr.io/mlcommons/<IMAGE_NAME> --build-arg ADAPTER_DIR="./adapters" .
 ```
 1. Push the docker image to the MLC package registry
 ```
 docker push ghcr.io/mlcommons/<IMAGE_NAME>:latest
 ```
 
-## Step 2: Running the image
+## Step 2: Pulling and running the image
+### Where to run?
+- on a GCP machine with sufficient NVIDIA GPU
+
+### Pulling the image
+- Use instructions to login with personal access token https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
+```
+docker pull ghcr.io/mlcommons/<YOUR_IMAGE>:latest
+```
+
+
 ### Running the container image **(WORK IN PROGRESS)**
 - Original command adapted from: https://docs.vllm.ai/en/latest/serving/deploying_with_docker.html
 - Need to pass some args to the image when starting
@@ -58,6 +73,20 @@ docker run \
     ghcr.io/mlcommons/<IMAGE_NAME>:latest \
     --api-key="<YOUR_SUPER_SECURE_API_KEY>"
 ```
+- NOTE: issues with max sequence len, have to specify that argument manually
+  with `--max-model-len` to set the context window size. Sometimes the GPU
+  cannot support the default, large window as in Llama Guard 3
+```
+docker run \
+    --runtime nvidia \
+    --gpus all \
+    --env "HUGGING_FACE_HUB_TOKEN=<ADD_HF_TOKEN>" \
+    -p 8000:8000 \
+    --ipc=host \
+    ghcr.io/mlcommons/<IMAGE_NAME>:latest \
+    --api-key="<YOUR_SUPER_SECURE_API_KEY>"
+    --max-model-len=<YOUR_LENGTH> (e.g. 18000)
+```
 
 ### Check if model successfully deployed the finetuned model
 source: https://docs.vllm.ai/en/latest/models/lora.html#serving-lora-adapters
@@ -70,6 +99,11 @@ You should see both the base model and the lora adapter model named
 meta's llama guard 2
 ```
 curl localhost:8000/v1/models | jq .
+```
+
+- NOTE: if unauthorized, add api key to curl header
+```
+curl -H "Authorization: Bearer <YOUR_API_KEY>" localhost:8000/v1/models | jq .
 ```
 
 ## FAQs
