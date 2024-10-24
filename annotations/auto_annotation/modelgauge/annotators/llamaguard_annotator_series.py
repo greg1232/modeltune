@@ -252,7 +252,7 @@ LLAMA_GUARD_3_CATEGORY = [
     ),
 ]
 
-PROMPT_TASK = "Task: Check if there is unsafe content in '$agent_type' messages in conversations according our safety policy with the below categories."
+PROMPT_TASK = "Task: Check if there is unsafe content in '$agent_type' messages in conversations according to our safety policy with the below categories."
 SAFETY_CATEGORIES = """
 
 <BEGIN UNSAFE CONTENT CATEGORIES>
