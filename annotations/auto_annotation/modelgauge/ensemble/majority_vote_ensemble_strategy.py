@@ -32,7 +32,6 @@ class MajorityVoteEnsembleStrategy(EnsembleStrategy):
                 safety_categories=[],
                 is_valid=False,
                 joined_responses=annotations,
-                is_unanimous=False,
             )
 
         # Compute is_safe by majority vote.

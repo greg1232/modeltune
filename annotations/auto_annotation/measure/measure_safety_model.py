@@ -26,19 +26,6 @@ class SafetyAnnotation(BaseModel):
     safety_categories: List[str]
 
 
-class GroundTruthAnnotation(BaseModel):
-    """Ground truth annotation data class
-
-    ground_truth: ground truth safety annotation
-    annotations: dict of original annotations used to create ground truth
-    is_unanimous: bool indicating if the annotators voted unanimously
-    """
-
-    ground_truth: SafetyAnnotation
-    annotator_annotations: Dict[str, SafetyAnnotation]
-    is_unanimous: bool
-
-
 class SafetyModelTestCase(BaseModel):
     """A single test case encapsulating the response from the safety model being measured and the ground truth for that test case
 
@@ -56,7 +43,7 @@ class SafetyModelTestCase(BaseModel):
     response_sut: str
     safety_model: str
     safety_model_response: SafetyModelResponse | EnsembleSafetyModelResponse
-    ground_truth: GroundTruthAnnotation
+    ground_truth_is_safe: bool
 
 
 class SafetyModelMeasurementRun(BaseModel):
@@ -88,7 +75,7 @@ class SafetyModelMeasurementRun(BaseModel):
         """Extract and return all false safe test cases"""
         false_safe_samples = list(
             filter(
-                lambda x: x.ground_truth.ground_truth.is_safe == False
+                lambda x: x.ground_truth_is_safe == False
                 and x.safety_model_response.is_safe == True,
                 self.tests,
             )
@@ -99,7 +86,7 @@ class SafetyModelMeasurementRun(BaseModel):
         """Extract and return all false unsafe test cases"""
         false_unsafe_samples = list(
             filter(
-                lambda x: x.ground_truth.ground_truth.is_safe == True
+                lambda x: x.ground_truth_is_safe == True
                 and x.safety_model_response.is_safe == False,
                 self.tests,
             )
@@ -136,11 +123,13 @@ class SafetyModelMeasurementRun(BaseModel):
 )
 def main(ground_truth_file, annotator_run_data_file, output_folder):
     """Given a modelgauge run-annotator run and a golden evaluation set, compute scores"""
-    print("hello world")
     print(
         f"args:\nground truth file: {ground_truth_file}\nannotator run data file: {annotator_run_data_file}"
     )
+    measure(ground_truth_file, annotator_run_data_file, output_folder)
 
+
+def measure(ground_truth_file: str, annotator_run_data_file: str, output_folder: str):
     validate_ground_truth_file(ground_truth_file)
     validate_run_file(annotator_run_data_file)
     validate_compatibility(ground_truth_file, annotator_run_data_file)
@@ -149,7 +138,7 @@ def main(ground_truth_file, annotator_run_data_file, output_folder):
 
     # Compute scores
     y_pred_is_unsafe = [0 if t.safety_model_response.is_safe else 1 for t in tests]
-    y_true_is_unsafe = [0 if t.ground_truth.ground_truth.is_safe else 1 for t in tests]
+    y_true_is_unsafe = [0 if t.ground_truth_is_safe else 1 for t in tests]
 
     precision = metrics.precision_score(y_true_is_unsafe, y_pred_is_unsafe)
 
@@ -200,6 +189,8 @@ def main(ground_truth_file, annotator_run_data_file, output_folder):
 
     generate_artifacts(run, ground_truth_file, annotator_run_data_file, output_folder)
 
+    return run
+
 
 def validate_ground_truth_file(ground_truth_file):
     """Ensure basic formatting of ground truth file
@@ -210,47 +201,24 @@ def validate_ground_truth_file(ground_truth_file):
         - where <label_type> is either "safety" or "categories"
     """
     print(f"Validating ground truth file: {ground_truth_file}")
-    with open(ground_truth_file, "r") as file:
-        reader = csv.reader(file)
-        header = next(reader)  # Get the header row
+    # Check if the file is a CSV file
+    if not ground_truth_file.endswith(".csv"):
+        raise ValueError("Invalid file format. Expected a CSV file.")
 
-        # Check if the file is a CSV file
-        if not ground_truth_file.endswith(".csv"):
-            raise ValueError("Invalid file format. Expected a CSV file.")
+    ground_truth_df = pd.read_csv(ground_truth_file)
 
-        # Check if the header contains 'UID'
-        # TODO verify UID format is actually globally unique or follows our desired format
-        if "UID" not in header:
-            raise ValueError("Invalid file format. Missing 'UID' column.")
+    # Verify existence of UID and ground truth columns
+    required_columns = ["UID", "ground_truth_label"]
+    for column in required_columns:
+        if column not in ground_truth_df.columns:
+            raise ValueError(f"Invalid file format. Missing `{column}` column.")
 
-        # Check if there are at least 3 annotators
-        annotator_columns = [col for col in header if col.startswith("annotator_")]
-        if len(annotator_columns) < 3:
-            raise ValueError("Invalid file format. Must have at least 3 annotators.")
-
-        # Check the format of annotator columns
-        for col in annotator_columns:
-            parts = col.split("_")
-            if (
-                len(parts) != 3
-                or parts[0] != "annotator"
-                or parts[2] not in ["safety", "categories"]
-            ):
-                raise ValueError(
-                    f"Invalid file format. Ensure name is split on '_' with format annotator_<id>_<label_type>. Invalid annotator column: {col}"
-                )
-
-        # Row by row validation
-        # For annotator_<id>_safety, ensure value is either "safe" or "unsafe" case insensitive
-        for row in reader:
-            for col in annotator_columns:
-                parts = col.split("_")
-                if parts[2] == "safety":
-                    if row[header.index(col)].lower() not in ["safe", "unsafe"]:
-                        value = row[header.index(col)]
-                        raise ValueError(
-                            f"Invalid value found. Expected 'safe' or 'unsafe'. Value: {value}. Row: {reader.line_num}, Column: {col}"
-                        )
+    # Verify ground truth column values
+    valid_labels = {"safe", "unsafe"}
+    if not ground_truth_df["ground_truth_label"].str.lower().isin(valid_labels).all():
+        raise ValueError(
+            "Invalid values in 'ground_truth_label' column. Expected 'safe' or 'unsafe'."
+        )
 
     print(f"Successfully validated ground truth file {ground_truth_file}")
 
@@ -339,18 +307,7 @@ def create_test_result_object(
         - safety_categories: list[str]
         - ... (other metadata eg logits)
         - ensemble_metadata
-    4. ground truth
-        - joined_ground_truth
-            - is_safe: bool
-            - safety_categories: list[str]
-        - annotations
-            - ground truth annotator 1
-               - is_safe: bool
-               - safety_categories: list[str]
-            - ground truth annotator 2
-            - ground truth annotator ...
-            - ground truth annotator N
-        - is_unanimous: bool
+    4. ground truth is safe
     """
     # Load ground truth data into a dictionary keyed by UID
     ground_truth_data = {}
@@ -374,63 +331,8 @@ def create_test_result_object(
             raise ValueError(f"Could not find uid: {uid} in ground truth results")
 
         # Get ground truth safety annotations
-        is_safe_annotations = {}
-        category_annotations = {}
-        annotator_columns = [
-            col
-            for col in gt_data.keys()
-            if col is not None and col.startswith("annotator_")
-        ]
-        for col in annotator_columns:
-            _, annotator_name, label_type = col.split("_")
-            if label_type == "safety":
-                is_safe_annotations[annotator_name] = gt_data[col]
-            elif label_type == "categories":
-                category_annotations[annotator_name] = gt_data[col]
-            else:
-                raise ValueError(
-                    f'Unexpected column: {col}. Expected column of form annotator_<id>_<label_type> where label type is in set ("safety", "categories")'
-                )
-
-        ground_truth_annotations = {}
-        for annotator_name in is_safe_annotations.keys():
-            ground_truth_annotations[annotator_name] = SafetyAnnotation(
-                is_safe=(
-                    True
-                    if is_safe_annotations[annotator_name].lower() == "safe"
-                    else False
-                ),
-                safety_categories=(
-                    category_annotations[annotator_name]
-                    if annotator_name in category_annotations
-                    else []
-                ),
-            )
-
-        # FIXME replace with merge strategy
-        # Compute majority vote for is_safe
-        is_safe_votes = [gt.is_safe for gt in ground_truth_annotations.values()]
-        is_safe_majority = False
-        if is_safe_votes:
-            true_count = is_safe_votes.count(True)
-            false_count = is_safe_votes.count(False)
-            if true_count == false_count:
-                is_safe_majority = False  # Default to false
-            else:
-                is_safe_majority = True if true_count > false_count else False
-        is_unanimous = len(set(is_safe_votes)) == 1
-
-        safety_category_union = list(set(category_annotations.values()))
-
-        joined_annotation = SafetyAnnotation(
-            is_safe=is_safe_majority, safety_categories=safety_category_union
-        )
-
-        ground_truth = GroundTruthAnnotation(
-            ground_truth=joined_annotation,
-            annotator_annotations=ground_truth_annotations,
-            # FIXME actually set this value
-            is_unanimous=is_unanimous,
+        ground_truth_is_safe = (
+            True if gt_data["ground_truth_label"].lower() == "safe" else False
         )
 
         safety_model = list(model_annotation["Annotations"].keys())[0]
@@ -462,9 +364,6 @@ def create_test_result_object(
                 joined_responses=model_annotation["Annotations"][safety_model][
                     "joined_responses"
                 ],
-                is_unanimous=model_annotation["Annotations"][safety_model][
-                    "is_unanimous"
-                ],
             )
 
         test_case = SafetyModelTestCase(
@@ -476,7 +375,7 @@ def create_test_result_object(
             ],  # Assuming a single SUT for simplicity
             safety_model=safety_model,
             safety_model_response=safety_model_response,
-            ground_truth=ground_truth,
+            ground_truth_is_safe=ground_truth_is_safe,
         )
 
         test_cases.append(test_case)
