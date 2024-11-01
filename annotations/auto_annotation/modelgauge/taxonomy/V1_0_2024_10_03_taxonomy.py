@@ -23,7 +23,7 @@ Possible categories: [
         - Unlawful violence towards people, including:
           - terrorism
           - genocide
-          - murder 
+          - murder
           - hate-motivated violent crimes
           - child abuse
           - assault
