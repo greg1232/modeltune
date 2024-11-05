@@ -2,7 +2,7 @@ import uuid
 import warnings
 from abc import ABC
 from collections import Counter
-from typing import Dict, List, Type
+from typing import Dict, List, Optional, Type
 
 import pandas as pd
 from pydantic import BaseModel
@@ -74,7 +74,7 @@ class ResponseDatasetSchema(PromptDatasetSchema):
 
     sut: str = "sut"
     pair_uid: str = "pair_uid"
-    response: str = "response"
+    response_text: str = "response_text"
 
 
 class ResponseDataset(BaseSafetyDataset):
@@ -88,7 +88,7 @@ class ResponseDataset(BaseSafetyDataset):
         mapper = {
             response_dataset_schema.pair_uid: annotator_input_schema.uid,
             response_dataset_schema.prompt_text: annotator_input_schema.prompt,
-            response_dataset_schema.response: annotator_input_schema.response,
+            response_dataset_schema.response_text: annotator_input_schema.response,
             response_dataset_schema.sut: annotator_input_schema.sut,
         }
 
@@ -108,7 +108,7 @@ class ResponseDataset(BaseSafetyDataset):
 class SafetyModelAnnotationDatasetSchema(BaseModel):
     pair_uid: str = "pair_uid"
     prompt_text: str = "prompt_text"
-    response: str = "response"
+    response_text: str = "response_text"
     sut: str = "sut"
     annotation_uid: str = "annotation_uid"
     annotator: str = "annotator"
@@ -244,6 +244,7 @@ class AnnotationRun:
         # Validate df before assigning it
         self._validate_df(df)
         self.df: pd.DataFrame = df
+        self.schema_ref = AnnotationRunSchema()
 
     @classmethod
     def from_jsonl(cls, filepath: str):
@@ -252,6 +253,9 @@ class AnnotationRun:
 
     def __len__(self):
         return len(self.df)
+
+    def uids(self):
+        return self.df[self.schema_ref.uid]
 
     def get_safes(self):
         sdf = self.to_safety_model_annotation()
@@ -273,7 +277,7 @@ class AnnotationRun:
         column_mapper = {
             src_schema.uid: target_schema.pair_uid,
             src_schema.prompt: target_schema.prompt_text,
-            src_schema.response: target_schema.response,
+            src_schema.response: target_schema.response_text,
             src_schema.sut: target_schema.sut,
         }
 
@@ -333,28 +337,18 @@ class AnnotationRun:
 class MeasurementGroundTruthDatasetSchema(BaseModel):
     pair_uid: str = "pair_uid"
     prompt_text: str = "prompt_text"
-    response: str = "response"
+    response_text: str = "response_text"
     sut: str = "sut"
+    hazard: str = "hazard"
+    human_annotation_1: str = "human_annotation_1"
+    human_annotation_2: str = "human_annotation_2"
+    human_annotation_3: str = "human_annotation_3"
+    human_unanimous_agreement: str = "human_unanimous_agreement"
     ground_truth_label: str = "ground_truth_label"
 
 
 class MeasurementGroundTruthDataset(BaseSafetyDataset):
     schema = MeasurementGroundTruthDatasetSchema
-
-    def write_measurement_input_csv(self, output_path: str):
-        src_schema = MeasurementGroundTruthDatasetSchema()
-        target_schema = MeasurementGroundTruthInputSchema()
-
-        mapper = {
-            src_schema.pair_uid: target_schema.uid,
-            src_schema.prompt_text: target_schema.prompt,
-            src_schema.response: target_schema.response,
-            src_schema.sut: target_schema.sut,
-        }
-
-        out_df = self.df.rename(columns=mapper)
-
-        out_df.to_csv(output_path, index=False)
 
     def write_annotation_input_csv(self, output_path: str):
         src_schema = MeasurementGroundTruthDatasetSchema()
@@ -363,7 +357,7 @@ class MeasurementGroundTruthDataset(BaseSafetyDataset):
         mapper = {
             src_schema.pair_uid: annotator_input_schema.uid,
             src_schema.prompt_text: annotator_input_schema.prompt,
-            src_schema.response: annotator_input_schema.response,
+            src_schema.response_text: annotator_input_schema.response,
             src_schema.sut: annotator_input_schema.sut,
         }
 
@@ -379,7 +373,26 @@ class MeasurementGroundTruthDataset(BaseSafetyDataset):
 
         out_df.to_csv(output_path, index=False)
 
+    def is_compatible_with_run(self, run: AnnotationRun):
+        self_schema = MeasurementGroundTruthDatasetSchema()
+        run_uids = run.uids().sort_values().reset_index(drop=True)
+        gt_uids = self.df[self_schema.pair_uid].sort_values().reset_index(drop=True)
 
-# TODO don't use this and update the measure_evaluator file with the proper input schema
-class MeasurementGroundTruthInputSchema(SafetyModelAnnotationInputDatasetSchema):
-    ground_truth_label: str = "ground_truth_label"
+        if not run_uids.equals(gt_uids):
+            return False
+        else:
+            return True
+
+
+class MeasurementResultsDatasetSchema(MeasurementGroundTruthDatasetSchema):
+    """Measurement results dataset schema. Annotator can mean an individual annotator or an ensemble"""
+
+    annotator: str = "annotator"
+    annotator_is_safe: str = "annotator_is_safe"
+    annotator_safety_categories: str = "annotator_safety_categories"
+    annotator_reasoning: str = "annotator_reasoning"
+    annotator_is_valid: str = "annotator_is_valid"
+
+
+class MeasurementResultsDataset(BaseSafetyDataset):
+    schema: Type[BaseModel] = MeasurementResultsDatasetSchema

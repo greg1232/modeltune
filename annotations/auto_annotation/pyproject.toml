@@ -25,6 +25,8 @@ transformers = "^4.44.2"
 modelgauge = "^0.6.3"
 modelgauge-openai = "^0.6.3"
 modelgauge-huggingface = "^0.6.3"
+statsmodels = "^0.14.3"
+streamlit = "^1.39.0"
 
 [tool.black]
 target-version = ["py310"]

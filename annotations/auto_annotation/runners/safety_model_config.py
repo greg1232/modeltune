@@ -14,12 +14,16 @@ SUPPORTED_SAFETY_MODELS = [
     "wildguard",
     "llama-3-70b.pe.tamalpais.2024-09-09",
     "mistral-8x22b.pe.tamalpais.2024-09-09",
+    "llama-3-70b.pe.whitney.2024-10-17",
+    "mistral-8x22b.pe.whitney.2024-10-17",
 ]
 
 REQUIRES_TOGETHER_API_KEY_ENV = [
     "llama_guard_3",
     "llama-3-70b.pe.tamalpais.2024-09-09",
     "mistral-8x22b.pe.tamalpais.2024-09-09",
+    "llama-3-70b.pe.whitney.2024-10-17",
+    "mistral-8x22b.pe.whitney.2024-10-17",
 ]
 
 REQUIRES_HF_TOKEN_ENV = [

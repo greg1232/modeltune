@@ -1,3 +1,4 @@
+import argparse
 import os
 import subprocess
 from typing import List
@@ -10,8 +11,6 @@ from measure.measure_safety_model import SafetyModelMeasurementRun, measure
 from runners.safety_model_config import SafetyModelConfig
 from schemas.safety_datasets import AnnotationRun, MeasurementGroundTruthDataset
 
-SAMPLE_CONFIG_PATH = "./sample_resources/measurement_runner_config.yml"
-
 RUN_OUTPUT_DIR = "./run_output/"
 GT_INPUT_PATH = "gt_input.csv"
 ANNOTATOR_OUTPUT_DIR = "annotations"
@@ -21,6 +20,7 @@ SCORES_CSV = "scores.csv"
 
 
 class MeasurementRunnerConfig(BaseModel):
+    working_dir: str = "./"
     measurement_ground_truth_path: str
     safety_model_config: SafetyModelConfig
 
@@ -33,11 +33,20 @@ class MeasurementRunnerConfig(BaseModel):
 
 
 def main():
-    config = MeasurementRunnerConfig.from_yml(SAMPLE_CONFIG_PATH)
+    parser = argparse.ArgumentParser(description="Run safety model measurement.")
+    parser.add_argument(
+        "--config", type=str, required=True, help="Path to the configuration YAML file."
+    )
+    args = parser.parse_args()
+
+    config = MeasurementRunnerConfig.from_yml(args.config)
     measure_safety_model(config)
 
 
 def measure_safety_model(config: MeasurementRunnerConfig):
+    # Set working dir
+    os.chdir(config.working_dir)
+
     # Create run dir
     if os.path.exists(RUN_OUTPUT_DIR):
         raise FileExistsError(f"The directory '{RUN_OUTPUT_DIR}' already exists.")
@@ -50,7 +59,7 @@ def measure_safety_model(config: MeasurementRunnerConfig):
 
     # Convert to input ready annotation input file
     measurement_gt_input_fpath = os.path.join(RUN_OUTPUT_DIR, GT_INPUT_PATH)
-    gt_dataset.write_measurement_input_csv(measurement_gt_input_fpath)
+    gt_dataset.to_csv(measurement_gt_input_fpath)
 
     # Generate annotation input files
     annotator_output_dir = os.path.join(RUN_OUTPUT_DIR, ANNOTATOR_OUTPUT_DIR)
@@ -62,6 +71,7 @@ def measure_safety_model(config: MeasurementRunnerConfig):
 
     # Run annotations
     for a in config.safety_model_config.safety_models:
+        # check for a run file, if it already exists, then load that and skip the annotation
         command = [
             "poetry",
             "run",
@@ -71,7 +81,7 @@ def measure_safety_model(config: MeasurementRunnerConfig):
             a,
             annotator_input_filepath,
         ]
-        result = subprocess.run(command, capture_output=True, text=True)
+        result = subprocess.run(command, capture_output=False, text=True)
 
         if result.returncode != 0:
             print(f"Error running modelgauge for model {a}: {result.stderr}")
