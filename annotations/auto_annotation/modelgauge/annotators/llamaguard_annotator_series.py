@@ -2,7 +2,9 @@ import os
 from dataclasses import dataclass
 from enum import Enum
 from string import Template
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Any
+import numpy as np
+import torch
 
 from pydantic import BaseModel
 
@@ -23,8 +25,9 @@ from modelgauge.suts.together_client import (
 class LlamaGuardAnnotation(BaseModel):
     is_safe: bool
     # The log probability of the generated token that determines is_safe.
-    is_safe_logprob: float
+    logprobs: Dict[Any, Any]
     violation_categories: List[str]
+    total_tokens: int
 
 
 def convert_llamaguard_to_safetyResponse(
@@ -35,9 +38,10 @@ def convert_llamaguard_to_safetyResponse(
     return SafetyModelResponse(
         is_safe=guard_annotation.is_safe,
         safety_categories=guard_annotation.violation_categories,
-        logprobs=guard_annotation.is_safe_logprob,
+        logprobs=guard_annotation.logprobs,
         raw_input=raw_input,
         raw_response=raw_response,
+        total_tokens_used=guard_annotation.total_tokens
     )
 
 
@@ -387,6 +391,7 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
         assert len(response.choices) == 1
         together_response = response.choices[0]
         lines = together_response.text.split()
+        total_tokens=response.usage.total_tokens
 
         assert (
             together_response.logprobs is not None
@@ -398,13 +403,17 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
         # Failing as the format for Llamaguard 3 is different
         # Check this for original version - https://github.com/mlcommons/modelgauge/blob/main/modelgauge/annotators/llama_guard_annotator.py
 
-        logprob = together_response.logprobs.token_logprobs[0]
+        tokens = together_response.logprobs.tokens
+        token_logprobs = together_response.logprobs.token_logprobs
+
+        logprobs = {"tokens": tokens, 
+                    "token_logprobs": token_logprobs}
 
         # This is all very strict, might want to be less so.
         if lines[0] == "safe":
             return convert_llamaguard_to_safetyResponse(
                 LlamaGuardAnnotation(
-                    is_safe=True, is_safe_logprob=logprob, violation_categories=[]
+                    is_safe=True, logprobs=logprobs, violation_categories=[], total_tokens=total_tokens
                 ),
                 raw_input=request.model_dump_json(),
                 raw_response=together_response.text,
@@ -422,8 +431,9 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
             return convert_llamaguard_to_safetyResponse(
                 LlamaGuardAnnotation(
                     is_safe=False,
-                    is_safe_logprob=logprob,
+                    logprobs=logprobs,
                     violation_categories=categories,
+                    total_tokens=total_tokens
                 ),
                 raw_input=request.model_dump_json(),
                 raw_response=together_response.text,
