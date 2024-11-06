@@ -41,7 +41,7 @@ def convert_llamaguard_to_safetyResponse(
         logprobs=guard_annotation.logprobs,
         raw_input=raw_input,
         raw_response=raw_response,
-        total_tokens_used=guard_annotation.total_tokens
+        total_tokens_used=guard_annotation.total_tokens,
     )
 
 
@@ -391,7 +391,7 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
         assert len(response.choices) == 1
         together_response = response.choices[0]
         lines = together_response.text.split()
-        total_tokens=response.usage.total_tokens
+        total_tokens = response.usage.total_tokens
 
         assert (
             together_response.logprobs is not None
@@ -406,14 +406,16 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
         tokens = together_response.logprobs.tokens
         token_logprobs = together_response.logprobs.token_logprobs
 
-        logprobs = {"tokens": tokens, 
-                    "token_logprobs": token_logprobs}
+        logprobs = {"tokens": tokens, "token_logprobs": token_logprobs}
 
         # This is all very strict, might want to be less so.
         if lines[0] == "safe":
             return convert_llamaguard_to_safetyResponse(
                 LlamaGuardAnnotation(
-                    is_safe=True, logprobs=logprobs, violation_categories=[], total_tokens=total_tokens
+                    is_safe=True,
+                    logprobs=logprobs,
+                    violation_categories=[],
+                    total_tokens=total_tokens,
                 ),
                 raw_input=request.model_dump_json(),
                 raw_response=together_response.text,
@@ -433,7 +435,7 @@ class LlamaGuardAnnotator(CompletionAnnotator[LlamaGuardAnnotation]):
                     is_safe=False,
                     logprobs=logprobs,
                     violation_categories=categories,
-                    total_tokens=total_tokens
+                    total_tokens=total_tokens,
                 ),
                 raw_input=request.model_dump_json(),
                 raw_response=together_response.text,
