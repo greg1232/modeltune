@@ -4,7 +4,6 @@ from enum import Enum
 from string import Template
 from typing import Callable, Dict, List, Optional, Any
 import numpy as np
-import torch
 
 from pydantic import BaseModel
 
