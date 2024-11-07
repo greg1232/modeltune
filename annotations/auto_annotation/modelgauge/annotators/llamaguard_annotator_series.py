@@ -2,9 +2,9 @@ import os
 from dataclasses import dataclass
 from enum import Enum
 from string import Template
-from typing import Callable, Dict, List, Optional, Any
-import numpy as np
+from typing import Any, Callable, Dict, List, Optional
 
+import numpy as np
 from pydantic import BaseModel
 
 from modelgauge.annotator import CompletionAnnotator
