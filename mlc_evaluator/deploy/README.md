@@ -36,7 +36,7 @@ TODO instructions on pushing image with token: https://docs.github.com/en/packag
 
 Initially the `<IMAGE_NAME>` is `ws3-model-test`.
 ```
-docker build -t ghcr.io/mlcommons/<IMAGE_NAME> --build-arg ADAPTER_DIR="./adapters" .
+docker build -t ghcr.io/mlcommons/<IMAGE_NAME> --build-arg HF_TOKEN=<HF_TOKEN> .
 ```
 1. Push the docker image to the MLC package registry
 ```
