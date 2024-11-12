@@ -1,0 +1,11 @@
+responses_dataset_path: ./sample_resources/sample_response_dataset.csv
+safety_model_config:
+  safety_models:
+    - name: llama_guard_3
+      runfile: testingrunfile
+    - name: mlc-safety-1.alpha
+      ensemble:
+        safety_models:
+          - llama_guard_3
+          - llama-3-70b.pe.tamalpais.2024-09-09
+        join_strategy: majority_vote

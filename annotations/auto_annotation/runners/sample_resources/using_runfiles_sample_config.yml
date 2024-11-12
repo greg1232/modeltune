@@ -2,4 +2,4 @@ responses_dataset_path: ./sample_resources/sample_response_dataset.csv
 safety_model_config:
   safety_models:
     - name: llama_guard_3
-    - name: llama-3-70b.pe.tamalpais.2024-09-09
+      runfile: ./sample_resources/sample_llama_guard_3_annotations_runfile.csv

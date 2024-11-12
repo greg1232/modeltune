@@ -59,5 +59,4 @@ class MajorityVoteEnsembleStrategy(EnsembleStrategy):
             safety_categories=list(safety_categories),
             is_valid=True,
             joined_responses=annotations,
-            is_unanimous=is_unanimous,
         )

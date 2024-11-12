@@ -1,0 +1,8 @@
+responses_dataset_path: <REPLACE_WITH_FULL_PATH>/training_5004_responses_concat.csv
+safety_model_config:
+  safety_models:
+    - name: wildguard
+    - name: llama_guard_3_20241003_taxonomy
+    - name: llama-3-70b.pe.whitney.2024-10-17
+    - name: mistral-8x22b.pe.whitney.2024-10-17
+

@@ -89,6 +89,7 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             self.config.inference_endpoint_name, token=self.config.token
         )
 
+        TIMEOUT_SECONDS = 60 * 15
         if endpoint.status == InferenceEndpointStatus.RUNNING:
             # nothing to do
             print("Endpoint is running. Continuing...")
@@ -99,7 +100,6 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             InferenceEndpointStatus.UPDATING,
         ):
             # wait for a given time
-            TIMEOUT_SECONDS = 60 * 6
             print(
                 f"Endpoint starting. Status: {endpoint.status}. Waiting up to {TIMEOUT_SECONDS}s to start."
             )
@@ -109,12 +109,11 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             elapsed = end_time - start_time
             print(f"Endpoint started. Waited {elapsed}s")
         elif endpoint.status == InferenceEndpointStatus.SCALED_TO_ZERO:
-            timeout_s = 60 * 6
             print(f"Endpoint scaled to zero... requesting to resume.")
             endpoint.resume(running_ok=True)
-            print(f"Requested resume. Waiting up to {timeout_s}s to start.")
+            print(f"Requested resume. Waiting up to {TIMEOUT_SECONDS}s to start.")
             start_time = time.time()
-            endpoint.wait(timeout_s)
+            endpoint.wait(TIMEOUT_SECONDS)
             end_time = time.time()
             elapsed = end_time - start_time
             print(f"Endpoint started. Waited {elapsed}s")
@@ -149,11 +148,6 @@ class WildguardAnnotator(CompletionAnnotator[SafetyModelResponse]):
             raise ValueError(
                 f"Can only handle ChatPrompt, TextPrompt types. Type given: {type(prompt.prompt)}"
             )
-
-        if prompt_str == "":
-            raise ValueError("Prompt cannot be empty")
-        if completion_str == "":
-            raise ValueError("Completion cannot be empty")
 
         request = INSTRUCTION_FORMAT.format(prompt=prompt_str, response=completion_str)
 

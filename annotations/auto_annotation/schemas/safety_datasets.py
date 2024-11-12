@@ -2,6 +2,7 @@ import uuid
 import warnings
 from abc import ABC
 from collections import Counter
+from collections.abc import Iterator
 from typing import Dict, List, Optional, Type
 
 import pandas as pd
@@ -15,6 +16,18 @@ from modelgauge.safety_model_response import (
     EnsembleSafetyModelResponse,
     SafetyModelResponse,
 )
+from modelgauge.single_turn_prompt_response import Annotation
+
+
+def required_fields(model: type[BaseModel], recursive: bool = False) -> Iterator[str]:
+    for name, field in model.model_fields.items():
+        if not field.is_required():
+            continue
+        t = field.annotation
+        if recursive and isinstance(t, type) and issubclass(t, BaseModel):
+            yield from required_fields(t, recursive=True)
+        else:
+            yield name
 
 
 class BaseSafetyDataset(ABC):
@@ -24,7 +37,7 @@ class BaseSafetyDataset(ABC):
     schema: Type[BaseModel]
 
     def __init__(self, df: pd.DataFrame):
-        required_columns = self.schema.model_fields.keys()
+        required_columns = required_fields(self.schema)
         for column in required_columns:
             if column not in df.columns:
                 raise ValueError(f"Missing required column: {column}")
@@ -45,8 +58,8 @@ class BaseSafetyDataset(ABC):
         self.df.to_csv(output_path, index=False)
 
 
-class SafetyModelAnnotationInputDatasetSchema(BaseModel):
-    """Dataset schema for input to annotation"""
+class AnnotationInputDatasetSchema(BaseModel):
+    """Dataset schema for input to modelgauge annotation"""
 
     uid: str = "UID"
     sut: str = "SUT"
@@ -54,12 +67,37 @@ class SafetyModelAnnotationInputDatasetSchema(BaseModel):
     response: str = "Response"
 
 
+class AnnotationInputDataset(BaseSafetyDataset):
+    """Dataset for input to modelgauge annotation"""
+
+    schema: Type[BaseModel] = AnnotationInputDatasetSchema
+
+    def ref_schema(self):
+        return AnnotationInputDatasetSchema()
+
+    def uids(self):
+        return self.df[self.ref_schema().uid]
+
+    def get_subset(self, uids: list[str]) -> "AnnotationInputDataset":
+        """Return a subset annotation input dataset"""
+        missing_uids = [
+            uid for uid in uids if uid not in self.df[self.ref_schema().uid].values
+        ]
+        if missing_uids:
+            raise ValueError(
+                f"The following UIDs are not present in the dataset: {missing_uids}"
+            )
+
+        subset_df = self.df[self.df[self.ref_schema().uid].isin(uids)]
+        return AnnotationInputDataset(df=subset_df)
+
+
 class PromptDatasetSchema(BaseModel):
     """Dataset schema tracking prompts"""
 
     prompt_uid: str = "prompt_uid"
-    hazard: str = "hazard"
-    hazard_subtype: str = "hazard_subtype"
+    hazard: Optional[str] = "hazard"
+    hazard_subtype: Optional[str] = "hazard_subtype"
     prompt_text: str = "prompt_text"
 
 
@@ -72,7 +110,7 @@ class PromptDataset(BaseSafetyDataset):
 class ResponseDatasetSchema(PromptDatasetSchema):
     """Dataset schema tracking prompts and responses"""
 
-    sut: str = "sut"
+    sut_uid: str = "sut_uid"
     pair_uid: str = "pair_uid"
     response_text: str = "response_text"
 
@@ -80,16 +118,15 @@ class ResponseDatasetSchema(PromptDatasetSchema):
 class ResponseDataset(BaseSafetyDataset):
     schema: Type[BaseModel] = ResponseDatasetSchema
 
-    def to_annotator_input_csv(self, output_path: str):
-        """Output a CSV with the following columns: UID, Prompt, Response, SUT"""
+    def to_annotation_dataset(self) -> AnnotationInputDataset:
         response_dataset_schema = ResponseDatasetSchema()
-        annotator_input_schema = SafetyModelAnnotationInputDatasetSchema()
+        annotator_input_schema = AnnotationInputDatasetSchema()
 
         mapper = {
             response_dataset_schema.pair_uid: annotator_input_schema.uid,
             response_dataset_schema.prompt_text: annotator_input_schema.prompt,
             response_dataset_schema.response_text: annotator_input_schema.response,
-            response_dataset_schema.sut: annotator_input_schema.sut,
+            response_dataset_schema.sut_uid: annotator_input_schema.sut,
         }
 
         out_df = self.df.rename(columns=mapper)
@@ -102,7 +139,8 @@ class ResponseDataset(BaseSafetyDataset):
             ]
         ]
 
-        out_df.to_csv(output_path, index=False)
+        annotation_input = AnnotationInputDataset(df=out_df)
+        return annotation_input
 
 
 class SafetyModelAnnotationDatasetSchema(BaseModel):
@@ -163,6 +201,24 @@ class SafetyModelAnnotationDataset(BaseSafetyDataset):
         )
 
         annotation_dataset_schema = SafetyModelAnnotationDatasetSchema()
+
+        # Check for duplicates in pair_uid and drop them
+        if responses_obj_df.duplicated(
+            subset=[
+                annotation_dataset_schema.pair_uid,
+                annotation_dataset_schema.annotator,
+            ]
+        ).any():
+            warnings.warn(
+                "Duplicates found in the combination of pair_uid and annotator columns. Dropping duplicates."
+            )
+            responses_obj_df = responses_obj_df.drop_duplicates(
+                subset=[
+                    annotation_dataset_schema.pair_uid,
+                    annotation_dataset_schema.annotator,
+                ]
+            )
+
         pivoted = responses_obj_df.pivot(
             index=annotation_dataset_schema.pair_uid,
             columns=annotation_dataset_schema.annotator,
@@ -178,7 +234,8 @@ class SafetyModelAnnotationDataset(BaseSafetyDataset):
             responses = {}
             for annotator in row.index:
                 responses[annotator] = row[annotator]
-            return e.compute_response(responses)
+            response = e.compute_response(responses)
+            return response
 
         def get_agreement_strength(joint_annotation: EnsembleSafetyModelResponse):
             unanimous = "unanimous"
@@ -201,18 +258,23 @@ class SafetyModelAnnotationDataset(BaseSafetyDataset):
         pivoted[p_gt_schema.pseudo_gt_is_safe] = pivoted[combined_obj_col].apply(
             lambda x: x.is_safe
         )
-
-        pivoted[p_gt_schema.pseudo_gt_is_safe] = pivoted[combined_obj_col].apply(
-            lambda x: x.is_safe
-        )
+        pivoted[p_gt_schema.pseudo_gt_hazard_categories] = pivoted[
+            combined_obj_col
+        ].apply(lambda x: x.safety_categories)
         pivoted[p_gt_schema.pseudo_gt_agreement_strength] = pivoted[
             combined_obj_col
         ].apply(get_agreement_strength)
 
         # output the new data structure (might need to create it)
         pseudo_gt_df = pivoted.loc[
-            :, [p_gt_schema.pseudo_gt_is_safe, p_gt_schema.pseudo_gt_agreement_strength]
+            :,
+            [
+                p_gt_schema.pseudo_gt_is_safe,
+                p_gt_schema.pseudo_gt_agreement_strength,
+                p_gt_schema.pseudo_gt_hazard_categories,
+            ],
         ].reset_index()
+
         # TODO something weird happening with multilevel index and presence of "annotator"
         pseudo_gt = PseudoGroundTruthDataset(pseudo_gt_df)
 
@@ -223,6 +285,7 @@ class PseudoGroundTruthDatasetSchema(BaseModel):
     pair_uid: str = "pair_uid"
     pseudo_gt_is_safe: str = "pseudo_gt_is_safe"
     pseudo_gt_agreement_strength: str = "pseudo_gt_agreement_strength"
+    pseudo_gt_hazard_categories: str = "pseudo_gt_hazard_categories"
 
 
 class PseudoGroundTruthDataset(BaseSafetyDataset):
@@ -245,6 +308,11 @@ class AnnotationRun:
         self._validate_df(df)
         self.df: pd.DataFrame = df
         self.schema_ref = AnnotationRunSchema()
+
+    def to_jsonl(self, filepath: str):
+        """Write to jsonl file"""
+        self.df.to_json(filepath, orient="records", lines=True)
+        pass
 
     @classmethod
     def from_jsonl(cls, filepath: str):
@@ -271,6 +339,7 @@ class AnnotationRun:
 
     def to_safety_model_annotation(self) -> SafetyModelAnnotationDataset:
         """Output"""
+        # TODO just read the annotation into a json column
         src_schema = AnnotationRunSchema()
         target_schema = SafetyModelAnnotationDatasetSchema()
 
@@ -333,12 +402,31 @@ class AnnotationRun:
         response = SafetyModelResponse.model_validate(annotations[annotator_id])
         return (annotator_id, response)
 
+    def matches_annotation_input_dataset(self, input_dataset: AnnotationInputDataset):
+        input_dataset_uids = input_dataset.uids().sort_values().reset_index(drop=True)
+        annotation_uids = (
+            self.df[self.schema_ref.uid].sort_values().reset_index(drop=True)
+        )
+
+        if not input_dataset_uids.equals(annotation_uids):
+            return False
+        else:
+            return True
+
+    def merge(self, other_run: "AnnotationRun"):
+        """Merge with another AnnotationRun"""
+        # Concatenate the dataframes
+        merged_df = pd.concat([self.df, other_run.df], ignore_index=True)
+
+        # Return a new AnnotationRun instance with the concatenated dataframe
+        return AnnotationRun(df=merged_df)
+
 
 class MeasurementGroundTruthDatasetSchema(BaseModel):
     pair_uid: str = "pair_uid"
     prompt_text: str = "prompt_text"
     response_text: str = "response_text"
-    sut: str = "sut"
+    sut_uid: str = "sut_uid"
     hazard: str = "hazard"
     human_annotation_1: str = "human_annotation_1"
     human_annotation_2: str = "human_annotation_2"
@@ -350,15 +438,18 @@ class MeasurementGroundTruthDatasetSchema(BaseModel):
 class MeasurementGroundTruthDataset(BaseSafetyDataset):
     schema = MeasurementGroundTruthDatasetSchema
 
+    def to_responses_dataset(self):
+        return ResponseDataset(self.df)
+
     def write_annotation_input_csv(self, output_path: str):
         src_schema = MeasurementGroundTruthDatasetSchema()
-        annotator_input_schema = SafetyModelAnnotationInputDatasetSchema()
+        annotator_input_schema = AnnotationInputDatasetSchema()
 
         mapper = {
             src_schema.pair_uid: annotator_input_schema.uid,
             src_schema.prompt_text: annotator_input_schema.prompt,
             src_schema.response_text: annotator_input_schema.response,
-            src_schema.sut: annotator_input_schema.sut,
+            src_schema.sut_uid: annotator_input_schema.sut,
         }
 
         out_df = self.df.rename(columns=mapper)
@@ -392,6 +483,7 @@ class MeasurementResultsDatasetSchema(MeasurementGroundTruthDatasetSchema):
     annotator_safety_categories: str = "annotator_safety_categories"
     annotator_reasoning: str = "annotator_reasoning"
     annotator_is_valid: str = "annotator_is_valid"
+    annotator_raw_response: str = "annotator_raw_response"
 
 
 class MeasurementResultsDataset(BaseSafetyDataset):

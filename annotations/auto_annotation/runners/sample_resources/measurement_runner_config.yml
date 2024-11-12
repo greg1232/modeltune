@@ -1,5 +1,5 @@
 measurement_ground_truth_path: ./sample_resources/sample_measurement_ground_truth.csv
 safety_model_config:
   safety_models:
-    - llama_guard_3
-    - llama-3-70b.pe.tamalpais.2024-09-09
+    - name: llama_guard_3
+    - name: llama-3-70b.pe.tamalpais.2024-09-09

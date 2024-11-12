@@ -1,0 +1,20 @@
+responses_dataset_path: /Users/ryan/projects/mlc/modeltune/annotations/auto_annotation/working_dir/fullpractice/record_for_airr_official_1.0_practice_prompt_set_concat.csv
+safety_model_config:
+  safety_models:
+    - name: wildguard
+      runfile: <REPLACE_WITH_FULL_PATH>/wildguard_annotations.jsonl
+    - name: llama-guard-3-lora-ruby
+      runfile: <REPLACE_WITH_FULL_PATH>/llama-guard-3-lora-ruby_annotations.jsonl
+    - name: llama-3-70b.pe.tamalpais.2024-09-09
+      runfile: <REPLACE_WITH_FULL_PATH>/llama-3-70b.pe.tamalpais.2024-09-09_annotations.jsonl
+    - name: mistral-8x22b.pe.tamalpais.2024-09-09
+      runfile: <REPLACE_WITH_FULL_PATH>/mistral-8x22b.pe.tamalpais.2024-09-09_annotations.jsonl
+    - name: mlc-safety-1.alpha
+      ensemble:
+        safety_models:
+          - wildguard
+          - llama-guard-3-lora-ruby
+          - llama-3-70b.pe.tamalpais.2024-09-09
+          - mistral-8x22b.pe.tamalpais.2024-09-09
+        join_strategy: majority_vote
+

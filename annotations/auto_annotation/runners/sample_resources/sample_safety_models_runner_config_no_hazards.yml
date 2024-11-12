@@ -1,0 +1,4 @@
+responses_dataset_path: ./sample_resources/sample_response_dataset_no_hazards.csv
+safety_model_config:
+  safety_models:
+    - name: llama_guard_3

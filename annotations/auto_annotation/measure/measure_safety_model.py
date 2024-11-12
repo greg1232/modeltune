@@ -376,6 +376,7 @@ def tests_as_df(tests: List[SafetyModelTestCase]):
                 out_schema.annotator_safety_categories: t.safety_model_response.safety_categories,
                 out_schema.annotator_reasoning: t.safety_model_response.reasoning,
                 out_schema.annotator_is_valid: t.safety_model_response.is_valid,
+                out_schema.annotator_raw_response: t.safety_model_response.raw_response,
             },
             tests,
         )
