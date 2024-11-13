@@ -364,23 +364,28 @@ def sort_by_human_agreement_strength(tests: List[SafetyModelTestCase]):
 
 
 def tests_as_df(tests: List[SafetyModelTestCase]):
-    # TODO if ensemble output a different schema
     out_schema = MeasurementResultsDatasetSchema()
 
     # Convert tests to just plain dict (or json)
-    tests_as_dicts = list(
-        map(
-            lambda t: {
-                **t.model_dump(),
-                out_schema.annotator_is_safe: t.safety_model_response.is_safe,
-                out_schema.annotator_safety_categories: t.safety_model_response.safety_categories,
-                out_schema.annotator_reasoning: t.safety_model_response.reasoning,
-                out_schema.annotator_is_valid: t.safety_model_response.is_valid,
-                out_schema.annotator_raw_response: t.safety_model_response.raw_response,
-            },
-            tests,
+    tests_as_dicts = []
+    for t in tests:
+        test_dict = t.model_dump()
+        test_dict[out_schema.annotator_is_safe] = t.safety_model_response.is_safe
+        test_dict[out_schema.annotator_safety_categories] = (
+            t.safety_model_response.safety_categories
         )
-    )
+        test_dict[out_schema.annotator_reasoning] = t.safety_model_response.reasoning
+        test_dict[out_schema.annotator_is_valid] = t.safety_model_response.is_valid
+        test_dict[out_schema.annotator_raw_response] = (
+            t.safety_model_response.raw_response
+        )
+
+        # Check ij the safety model is an ensemble
+        if isinstance(t.safety_model_response, EnsembleSafetyModelResponse):
+            for idx, response in t.safety_model_response.joined_responses.items():
+                test_dict[f"ensemble_member_{idx}_is_safe"] = response.is_safe
+
+        tests_as_dicts.append(test_dict)
 
     df = pd.DataFrame.from_dict(tests_as_dicts)
 

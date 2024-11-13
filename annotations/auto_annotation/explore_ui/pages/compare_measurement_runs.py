@@ -82,21 +82,33 @@ if uploaded_file_1 is not None and uploaded_file_2 is not None:
         "ground_truth_is_safe",
         "annotator_is_safe",
     ]
-    comparison_list_columns = [
-        "uid",
-        "ground_truth_is_safe",
-        "annotator_is_safe",
-        "annotator_is_valid",
-        "annotator_reasoning",
-        "safety_model_response",
-    ]
 
-    def display_comparison_view(
-        title, description, df1, df2, selection_list_columns, comparison_list_columns
-    ):
+    def display_comparison_view(title, description, df1, df2):
         st.markdown(f"### {title}")
         st.markdown(f"{description}")
-        list_df = df1[selection_list_columns]
+
+        merged_df = df1.merge(df2, on="uid")
+        is_safe_m1 = f"is_safe_{m1_model_name}"
+        is_safe_m2 = f"is_safe_{m2_model_name}"
+        merged_df.rename(
+            columns={
+                "prompt_x": "prompt",
+                "response_x": "response",
+                "ground_truth_is_safe_x": "ground_truth_is_safe",
+                "annotator_is_safe_x": is_safe_m1,
+                "annotator_is_safe_y": is_safe_m2,
+            },
+            inplace=True,
+        )
+        selection_list_columns = [
+            "uid",
+            "prompt",
+            "response",
+            "ground_truth_is_safe",
+            is_safe_m1,
+            is_safe_m2,
+        ]
+        list_df = merged_df[selection_list_columns]
         selection_event = st.dataframe(
             list_df, hide_index=True, on_select="rerun", selection_mode="multi-row"
         )
@@ -112,41 +124,33 @@ if uploaded_file_1 is not None and uploaded_file_2 is not None:
 
             with col1:
                 st.markdown(f"#### {m1_model_name}")
-                st.dataframe(selected_tests_1[comparison_list_columns], hide_index=True)
+                st.dataframe(selected_tests_1, hide_index=True)
 
             with col2:
                 st.markdown(f"#### {m2_model_name}")
-                st.dataframe(selected_tests_2[comparison_list_columns], hide_index=True)
+                st.dataframe(selected_tests_2, hide_index=True)
 
     display_comparison_view(
         "Both incorrect",
         "Both incorrect compared to ground truth",
         both_incorrect_m1,
         both_incorrect_m2,
-        selection_list_columns,
-        comparison_list_columns,
     )
     display_comparison_view(
         "Corrections",
         "Correct in model 1 and incorrect in model 2",
         corrections_m1,
         corrections_m2,
-        selection_list_columns,
-        comparison_list_columns,
     )
     display_comparison_view(
         "Regressions",
         "Incorrect in model 1 and correct in model 2",
         regressions_m1,
         regressions_m2,
-        selection_list_columns,
-        comparison_list_columns,
     )
     display_comparison_view(
         "Both correct",
         "Both correct compared to ground truth",
         both_correct_m1,
         both_correct_m2,
-        selection_list_columns,
-        comparison_list_columns,
     )
