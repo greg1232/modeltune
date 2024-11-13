@@ -1,5 +1,6 @@
 from string import Template
 
+import pytest
 from openai.types import Completion, CompletionChoice
 from openai.types.completion_choice import Logprobs
 
@@ -161,6 +162,45 @@ def test_translate_unsafe_response():
         raw_response=response_text,
     )
 
+    assert result.model_dump_json() == expected_result.model_dump_json()
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_parse_trailing_s():
+    annotator = _fake_annotator()
+
+    response_text = "unsafe\nS1,S2,S"
+    response = _make_fake_openai_completion(response_text)
+
+    result = annotator.translate_response(None, response)
+
+    expected_result = SafetyModelResponse(
+        is_safe=False,
+        safety_categories=["Violent Crimes", "Sex-Related Crimes"],
+        is_valid=True,
+        logprobs=None,
+        raw_response=response_text,
+    )
+
+    assert result.model_dump_json() == expected_result.model_dump_json()
+
+
+@pytest.mark.filterwarnings("ignore::UserWarning")
+def test_parse_trailing_comma():
+    annotator = _fake_annotator()
+
+    response_text = "unsafe\nS1,S2,"
+    response = _make_fake_openai_completion(response_text)
+
+    result = annotator.translate_response(None, response)
+
+    expected_result = SafetyModelResponse(
+        is_safe=False,
+        safety_categories=["Violent Crimes", "Sex-Related Crimes"],
+        is_valid=True,
+        logprobs=None,
+        raw_response=response_text,
+    )
     assert result.model_dump_json() == expected_result.model_dump_json()
 
 

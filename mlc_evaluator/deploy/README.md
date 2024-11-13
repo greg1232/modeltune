@@ -84,7 +84,7 @@ docker run \
     -p 8000:8000 \
     --ipc=host \
     ghcr.io/mlcommons/<IMAGE_NAME>:latest \
-    --api-key="<YOUR_SUPER_SECURE_API_KEY>"
+    --api-key="<YOUR_SUPER_SECURE_API_KEY>" \
     --max-model-len=<YOUR_LENGTH> (e.g. 18000)
 ```
 

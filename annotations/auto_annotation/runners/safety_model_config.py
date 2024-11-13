@@ -24,6 +24,8 @@ SUPPORTED_SAFETY_MODELS = [
     "mistral-8x22b.pe.whitney.2024-10-17",
     "llama-guard-3-lora-ruby-local",
     "llama-guard-3-lora-ruby",
+    "mistral-7b-ruby",
+    "mistral-7b-ruby-local",
 ]
 
 REQUIRES_TOGETHER_API_KEY_ENV = [
@@ -42,6 +44,7 @@ REQUIRES_HF_TOKEN_ENV = [
 REQUIRES_VLLM_API_KEY = [
     "llama-guard-3-lora-ruby-local",
     "llama-guard-3-lora-ruby",
+    "mistral-7b-ruby-local",
 ]
 
 SUPPORTED_ENSEMBLE_JOIN_STRATEGIES = ["majority_vote"]

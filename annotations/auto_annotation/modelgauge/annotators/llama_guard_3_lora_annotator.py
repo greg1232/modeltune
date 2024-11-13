@@ -1,5 +1,6 @@
 from string import Template
 from typing import List
+from warnings import warn
 
 from openai import OpenAI
 from openai.types import Completion
@@ -119,7 +120,24 @@ class LlamaGuard3LoRAAnnotator(CompletionAnnotator[SafetyModelResponse]):
             elif safe_unsafe_str == "unsafe":
                 categories = []
                 raw_categories_list = lines[1].strip().split(",")
+
                 for raw_category_code in raw_categories_list:
+                    cleaned_category_code = raw_category_code.strip()
+
+                    # Best effort parsing for category. Particularly for finetuned models, there are some edge cases
+                    # e.g. trailing comma leading to blank category:    unsafe S10,S12,S2,S8,
+                    # e.g. trailing incomplete category:                unsafe S1,S11,S5,S8,S
+                    if cleaned_category_code == "":
+                        warn(
+                            f"Unrecognized or malformatted category: {cleaned_category_code}. Blank category. Skipping..."
+                        )
+                        continue
+                    if cleaned_category_code == "S":
+                        warn(
+                            f"Unrecognized or malformatted category: {cleaned_category_code}. Skipping..."
+                        )
+                        continue
+
                     decoded_safety_category = self.category_map[
                         raw_category_code.strip()
                     ]
