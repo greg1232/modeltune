@@ -120,7 +120,9 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
                         role=ChatRole.user,
                     ),
                 ],
-                options=SUTOptions(max_tokens=self.config.llm_config.max_tokens),
+                options=SUTOptions(
+                    max_tokens=self.config.llm_config.max_tokens, temperature=0.0
+                ),
             )
         )
 

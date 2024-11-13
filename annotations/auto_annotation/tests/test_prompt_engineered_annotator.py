@@ -45,6 +45,7 @@ def _fake_request():
         ],
         max_tokens=100,
         n=1,
+        temperature=0.0,
     )
     return request
 
@@ -80,6 +81,7 @@ def test_translate_request_text_prompt():
         max_tokens=annotator.config.llm_config.max_tokens,
         logprobs=True,
         n=1,
+        temperature=0.0,
     )
 
     assert request.model_dump_json() == correct_request.model_dump_json()
@@ -121,6 +123,7 @@ def test_translate_request_chat_prompt():
         max_tokens=annotator.config.llm_config.max_tokens,
         logprobs=True,
         n=1,
+        temperature=0.0,
     )
 
     assert request.model_dump_json() == correct_request.model_dump_json()
