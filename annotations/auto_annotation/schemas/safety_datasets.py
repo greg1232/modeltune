@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from modelgauge.ensemble.ensemble import Ensemble
 from modelgauge.ensemble.majority_vote_ensemble_strategy import (
-    MajorityVoteEnsembleStrategy,
+    MajorityVoteUnsafeTiesEnsembleStrategy,
 )
 from modelgauge.safety_model_response import (
     EnsembleSafetyModelResponse,
@@ -228,7 +228,7 @@ class SafetyModelAnnotationDataset(BaseSafetyDataset):
         # TODO validate for every pair_uid, there exists an annotation from every annotator
 
         # compute pseudo ground truth column with output
-        e = Ensemble(strategy=MajorityVoteEnsembleStrategy())
+        e = Ensemble(strategy=MajorityVoteUnsafeTiesEnsembleStrategy())
 
         def get_combined_response(row) -> EnsembleSafetyModelResponse:
             responses = {}

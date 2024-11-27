@@ -4,8 +4,10 @@ from typing import List, Optional
 import yaml
 from pydantic import BaseModel
 
+from modelgauge.ensemble.ensemble_strategy import EnsembleStrategies
 from modelgauge.ensemble.majority_vote_ensemble_strategy import (
-    MajorityVoteEnsembleStrategy,
+    MajorityVoteSafeTiesEnsembleStrategy,
+    MajorityVoteUnsafeTiesEnsembleStrategy,
 )
 from schemas.safety_datasets import AnnotationInputDataset, AnnotationRun
 
@@ -45,9 +47,8 @@ REQUIRES_VLLM_API_KEY = [
     "llama-guard-3-lora-ruby-local",
     "llama-guard-3-lora-ruby",
     "mistral-7b-ruby-local",
+    "mistral-7b-ruby",
 ]
-
-SUPPORTED_ENSEMBLE_JOIN_STRATEGIES = ["majority_vote"]
 
 
 class EnsembleConfig(BaseModel):
@@ -55,15 +56,19 @@ class EnsembleConfig(BaseModel):
     join_strategy: str
 
     def model_post_init(self, __context):
-        if self.join_strategy not in SUPPORTED_ENSEMBLE_JOIN_STRATEGIES:
+        supported_ensemble_join_strategies = [
+            strategy.value for strategy in EnsembleStrategies
+        ]
+        if self.join_strategy not in supported_ensemble_join_strategies:
             raise ValueError(
-                f"Ensemble join strategy is not supported: {self.join_strategy}. Supported strategies: {SUPPORTED_ENSEMBLE_JOIN_STRATEGIES}"
+                f"Ensemble join strategy is not supported: {self.join_strategy}. Supported strategies: {supported_ensemble_join_strategies}"
             )
 
     def get_join_strategy(self):
-        # TODO tie "majority_vote" to an actual variable or class
-        if self.join_strategy == "majority_vote":
-            return MajorityVoteEnsembleStrategy()
+        if self.join_strategy == EnsembleStrategies.MAJORITY_TIE_SAFE.value:
+            return MajorityVoteSafeTiesEnsembleStrategy()
+        elif self.join_strategy == EnsembleStrategies.MAJORITY_TIE_UNSAFE.value:
+            return MajorityVoteUnsafeTiesEnsembleStrategy()
         else:
             raise ValueError(f"Unsupported join strategy: {self.join_strategy}")
 

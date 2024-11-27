@@ -154,6 +154,10 @@ def run_safety_models(
         print(f"Starting run for safety model: {safety_model.name}")
 
         if safety_model.ensemble:
+            if safety_model.name in completed_safety_model_runs:
+                print(f"Already ran safety model: {safety_model.name}. Skipping...")
+                continue
+
             print("Starting ensemble run.")
             response_files_to_join = []
 

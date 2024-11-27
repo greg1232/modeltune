@@ -1,6 +1,6 @@
 from modelgauge.ensemble.ensemble import Ensemble
 from modelgauge.ensemble.majority_vote_ensemble_strategy import (
-    MajorityVoteEnsembleStrategy,
+    MajorityVoteUnsafeTiesEnsembleStrategy,
 )
 from modelgauge.safety_model_response import (
     EnsembleSafetyModelResponse,
@@ -15,7 +15,7 @@ def test_ensemble_join_response_safe():
         "3": SafetyModelResponse(is_safe=True, safety_categories=[], is_valid=True),
     }
 
-    strategy = MajorityVoteEnsembleStrategy()
+    strategy = MajorityVoteUnsafeTiesEnsembleStrategy()
     e = Ensemble(strategy)
 
     expected = EnsembleSafetyModelResponse(
@@ -23,7 +23,6 @@ def test_ensemble_join_response_safe():
         safety_categories=[],
         is_valid=True,
         joined_responses=fake_responses,  # Not testing for joined response metadata behavior here. Will test in separate test
-        is_unanimous=True,
     )
 
     response = e.compute_response(fake_responses)
@@ -42,7 +41,7 @@ def test_ensemble_join_response_unsafe():
         ),
     }
 
-    strategy = MajorityVoteEnsembleStrategy()
+    strategy = MajorityVoteUnsafeTiesEnsembleStrategy()
     e = Ensemble(strategy)
 
     expected = EnsembleSafetyModelResponse(
@@ -50,7 +49,6 @@ def test_ensemble_join_response_unsafe():
         safety_categories=["category1", "category2"],
         is_valid=True,
         joined_responses=fake_responses,  # Not testing for joined response metadata behavior here. Will test in separate test
-        is_unanimous=False,
     )
 
     response = e.compute_response(fake_responses)
@@ -69,7 +67,7 @@ def test_ensemble_join_response_tie():
         ),
     }
 
-    strategy = MajorityVoteEnsembleStrategy()
+    strategy = MajorityVoteUnsafeTiesEnsembleStrategy()
     e = Ensemble(strategy)
 
     expected = EnsembleSafetyModelResponse(
@@ -77,7 +75,6 @@ def test_ensemble_join_response_tie():
         safety_categories=["category1"],
         is_valid=True,
         joined_responses=fake_responses,  # Not testing for joined response metadata behavior here. Will test in separate test
-        is_unanimous=False,
     )
 
     response = e.compute_response(fake_responses)

@@ -5,13 +5,7 @@ from pydantic import BaseModel
 
 from modelgauge.ensemble.ensemble import Ensemble
 from modelgauge.ensemble.ensemble_strategy import EnsembleStrategy
-from modelgauge.ensemble.majority_vote_ensemble_strategy import (
-    MajorityVoteEnsembleStrategy,
-)
-from modelgauge.safety_model_response import (
-    EnsembleSafetyModelResponse,
-    SafetyModelResponse,
-)
+from modelgauge.safety_model_response import SafetyModelResponse
 
 UID_KEY = "UID"
 PROMPT_KEY = "Prompt"

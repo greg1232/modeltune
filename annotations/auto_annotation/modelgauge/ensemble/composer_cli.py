@@ -1,8 +1,10 @@
 import argparse
 
 from modelgauge.ensemble.composer import EnsembleComposer
+from modelgauge.ensemble.ensemble_strategy import EnsembleStrategies
 from modelgauge.ensemble.majority_vote_ensemble_strategy import (
-    MajorityVoteEnsembleStrategy,
+    MajorityVoteSafeTiesEnsembleStrategy,
+    MajorityVoteUnsafeTiesEnsembleStrategy,
 )
 
 
@@ -33,9 +35,12 @@ def main():
     print("\n")
 
     # Instantiate the appropriate ensemble strategy
-    if args.ensemble_strategy == "majority_vote":
-        print("Using majority vote strategy to mix results")
-        strategy = MajorityVoteEnsembleStrategy()
+    if args.ensemble_strategy == EnsembleStrategies.MAJORITY_TIE_UNSAFE:
+        print("Using majority vote unsafe tiebreaker strategy to mix results")
+        strategy = MajorityVoteUnsafeTiesEnsembleStrategy()
+    elif args.ensemble_strategy == EnsembleStrategies.MAJORITY_TIE_SAFE:
+        print("Using majority vote safe tiebreaker strategy to mix results")
+        strategy = MajorityVoteSafeTiesEnsembleStrategy()
     else:
         raise ValueError(f"Unknown ensemble strategy: {args.ensemble_strategy}")
 
