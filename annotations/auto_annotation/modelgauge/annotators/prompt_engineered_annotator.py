@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Union
 
 from pydantic import BaseModel
@@ -151,6 +152,13 @@ class PromptEngineeredAnnotator(CompletionAnnotator[SafetyModelResponse]):
             end_index = cleaned_str.rfind("}")
             if end_index != -1:
                 cleaned_str = cleaned_str[: end_index + 1]
+
+            # Replace known issue where `$is_safe:` is outputted instead of `is_safe:`
+            if re.search(r"\$is_safe", cleaned_str):
+                print(
+                    'Warning: Detected "$is_safe" in the response. Replacing with "is_safe".'
+                )
+            cleaned_str = re.sub(r"\$is_safe", "is_safe", cleaned_str)
 
             # Parse the cleaned string
             response_json = json.loads(cleaned_str)

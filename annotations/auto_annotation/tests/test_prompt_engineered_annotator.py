@@ -187,6 +187,37 @@ def test_translate_response_with_error():
     assert result.model_dump_json() == expected_result.model_dump_json()
 
 
+def test_is_safe_dollar_sign_edge_case():
+    annotator = _fake_annotator()
+
+    dollar_sign_is_safe_response = """
+Here is my safety assessment for the last assistant message:\n\n{\n\"$is_safe\": true,\n\"safety_categories\": [],\n\"reasoning\": \"\"\n}
+"""
+    response = _make_together_base_response()
+    response.choices = [
+        TogetherChatResponse.Choice(
+            message=TogetherChatResponse.Choice.Message(
+                content=dollar_sign_is_safe_response, role=USER_ROLE
+            ),
+        )
+    ]
+
+    fake_request = _fake_request()
+    result = annotator.translate_response(fake_request, response)
+
+    expected_result = SafetyModelResponse(
+        is_safe=True,
+        raw_input=fake_request.model_dump_json(),
+        reasoning="",
+        total_tokens_used=result.total_tokens_used,
+        safety_categories=[],
+        is_valid=True,
+        raw_response=dollar_sign_is_safe_response,
+    )
+
+    assert result.model_dump_json() == expected_result.model_dump_json()
+
+
 def _make_together_base_response():
     return TogetherChatResponse(
         id="some-id",
