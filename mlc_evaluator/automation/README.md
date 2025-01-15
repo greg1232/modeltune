@@ -2,7 +2,7 @@
 
 ```bash
 poetry install
-python deploy_evaluator.py # this will show help
+poetry run python deploy_evaluator.py --help # this will show help
 ```
 
 ## Prerequisites
@@ -10,8 +10,9 @@ python deploy_evaluator.py # this will show help
 * gcloud CLI
 * gcloud CLI active login `gcloud auth application-default login --no-launch-browser`
 * a VM at GCP (details at bottom)
-* private ssh key to a machine in `~/.ssh/eval-runner-dev-admin`
-* Environment variables on *your machine*:
+* private ssh key to a machine in `~/.ssh/eval-runner-dev-admin` (`chmod 0600` as usual).
+
+### Environment Variables On *Your Machine*:
 
 
 ```bash
@@ -21,76 +22,146 @@ export GCP_ZONE="us-central1a"
 # recommended (sensible defaults in gcp.py)
 export GCP_PROJECT="ai-safety-dev"
 export SSH_USER="admin"
-# github container registry token
-export CR_PAT=<your token>
-export CR_USER=<your username>
+# github personal access token with read:packages permission
+export CR_PAT=<your github token>
+export CR_USER=<your github username>
 # hugging face token
 export HF_TOKEN=<your token>
 export HF_USER=MLCommons-Association
 export VLLM_API_KEY=<the vllm server api key> # in Keeper
 ```
 
-* Environment variables on *the server*:
+### Environment Variables On *The Server*:
+
+These can be set from your computer by calling `poetry run python deploy_evaluator.py configure -h <instance ip>`.
+You only need to do it once (or if you need to set new values).
+
+For reference:
 
 ```bash
-# github container registry token
-export CR_PAT=<your token>
-export CR_USER=<your username>
+# github personal access token with read:packages permission
+export CR_PAT=<your github token>
+export CR_USER=<your github username>
 # hugging face token
 export HF_TOKEN=<your token>
 export HF_USER=MLCommons-Association
 export VLLM_API_KEY=<the vllm server api key> # in Keeper
 ```
 
-## Tests
+## Typical Scenarios
 
-Not a lot for now.
+### What Images Can I Use?
 
-```bash
-python -m pytest tests
+[Visit the registry on Github](https://github.com/orgs/mlcommons/packages?tab=packages&q=ws3)
+
+In these examples, your image is `ws3-llama-guard-3-ruby` and the tag is `v0.3`.
+
+### Pull An Image
+
+```
+poetry run python deploy_evaluator.py pull -i ws3-llama-guard-3-ruby -t v0.3 -h <instance ip>
 ```
 
-## Example Usage
+### Run A VLLM Container
 
-### Run the "evaluator" image on the "eval-runner-03-dev-vm" machine
-
-```bash
-python deploy_evaluator.py run -n eval-runner-03-dev-vm -i evaluator
+```
+poetry run python deploy_evaluator.py run -i ws3-llama-guard-3-ruby -t v0.3 -h <instance ip>
 ```
 
-### What instances do I have?
+### What Instances Do I Have?
 
 ```bash
 python deploy_evaluator.py instances
 ```
 
-### What is the IP address of my instance?
+### What Is My Instance's IP Address?
 
 ```bash
 python deploy_evaluator.py instance -n eval-runner-03-dev-vm
 ```
 
-### Turn my instance on
+### Turn My Instance On
 
 ```bash
 python deploy_evaluator.py start -n eval-runner-03-dev-vm
 ```
 
-### Turn my instance off
+### Turn My Instance Off
 
 ```bash
 python deploy_evaluator.py stop -n eval-runner-03-dev-vm
 ```
 
-There are more functions too.
-
-### Get the list of models
+<a name="models"></a>### Get The List Of Models
 
 ```bash
 curl $(poetry run python deploy_evaluator.py url)/models \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $VLLM_API_KEY"
 ```
+
+### More Commands
+
+```bash
+poetry run python deploy_evaluator.py --help
+poetry run python deploy_evaluator.py <command> --help
+```
+
+## Troubleshooting
+
+If something isn't working, the first thing to check are permissions.
+
+### Permissions
+
+* On your computer, try `ssh admin@<instance ip> -i ~/.ssh/eval-runner-dev-admin`. If that doesn't work, make sure you are using
+  the right private key, the private key file is `chmod 0600`, and the instance IP address is correct. The private
+  key is in Keeper under `eval-runner-01-dev-shared`
+* On the machine, run `docker login -u <your github username> -p ${CR_PAT} ghcr.io`. If this fails, your username
+  or token are not correct.
+* On the machine, after successful `docker login`, try pulling: `docker pull ghcr.io/mlcommons/ws3-mistral-lora-ruby:v0.1`.
+  If that doesn't work, your github token is missing the `read:packages` permission, or it is expired.
+* On your computer, send a test prompt. If you get an error, run all the tests under "Troubleshooting." If that still
+  doesn't work, contact AIRR engineering.
+
+#### Send A Test Prompt Via CURL
+
+If you don't know what models are available, [look them up](#models).
+
+```bash
+curl $(poetry run python deploy_evaluator.py url)/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $VLLM_API_KEY" \
+  -d '{
+  "model": "llama-guard-3-lora",
+  "prompt": "Pangolins are",
+  "max_tokens": 7,
+  "temperature": 0
+  }'
+```
+
+#### Send A Test Prompt Via The Deployer
+
+```bash
+# run a test prompt
+poetry run python deploy_evaluator.py test -h 34.133.88.36 -p "what time is it?" -m mistral-lora-ruby`
+```
+
+### Configuration
+
+* If the instance is brand new, and the `run` or `pull` commands fail, try running `python deploy_evaluator.py configure -n <instance_name>`
+* The `run` command won't show anything until the container is stopped. It's recommended to background it, and check that the container is indeed running with the `what-is-running` command.
+
+```bash
+python deploy_evaluator.py run -i ws3-model-test -t latest -n eval-runner-03-dev-vm &
+python deploy_evaluator.py what-is-running -n eval-runner-03-dev-vm
+python deploy_evaluator.py test -n eval-runner-03-dev-vm -p "I will smoke crystal meth"
+
+curl $(poetry run python deploy_evaluator.py url)/models \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $VLLM_API_KEY"
+```
+
+
 
 ## How It Works
 
@@ -113,25 +184,11 @@ stdout from the instance in that case.
 
 * The vllm server will be listening on port 8000
 
-## Troubleshooting
-
-* If the instance is brand new, and the `run` or `pull` commands fail, try running `python deploy_evaluator.py configure -n <instance_name>`
-* The `run` command won't show anything until the container is stopped. It's recommended to background it, and check that the container is indeed running with the `what-is-running` command.
-
-```bash
-python deploy_evaluator.py run -i ws3-model-test -t latest -n eval-runner-03-dev-vm &
-python deploy_evaluator.py what-is-running -n eval-runner-03-dev-vm
-python deploy_evaluator.py test -n eval-runner-03-dev-vm -p "I will smoke crystal meth"
-
-curl $(poetry run python deploy_evaluator.py url)/models \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $VLLM_API_KEY"
-```
-
 ## TODO Next
 
 * Stream logs for long-running operations like `pull` or `run` so the operator can see what's happening.
 * `async` the long-running operations.
 * Better format for `what-is-running` command output.
-* Figure out how to 1. send the system prompt in the `test` request, should it be under "system" role and 2. how to verify that the right system prompt is sent to the right version of evaluator requested.
-*
+* Figure out how to:
+  1. send the system prompt in the `test` request (should it be under "system" role?)
+  2. verify that the right system prompt is sent to the right version of evaluator requested.

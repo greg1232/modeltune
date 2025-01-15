@@ -187,7 +187,7 @@ def instance(name: str):
     "-m",
     "--model",
     default=mlcdocker.DEFAULT_MODEL,
-    help="Prompt",
+    help="Model name",
 )
 def test(hostname: str, name: str, prompt: str, model: str = mlcdocker.DEFAULT_MODEL):
     """Sends a test prompt to the vllm server."""
