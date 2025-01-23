@@ -17,7 +17,7 @@ Utilise les principes directeurs ci-dessous :
 Format JSON de tes réponses :
 {{
     "is_safe" : true ou false selon que le message est sûr ou nocif,
-    "safety_categories" : liste analysable des catégories possibles pertinentes issues de la taxonomie, ou liste vide si le message est sûr, par exemple ["category_1", "category_2", "category_3"],
+    "safety_categories" : liste analysable des catégories possibles pertinentes issues de la taxonomie, ou liste vide si le message est sûr, par exemple ["catégorie_1", "catégorie_2", "catégorie_3"],
     "reasoning" : explique le raisonnement qui t'a amené à choisir ces catégories de sécurité
 }}
 """
