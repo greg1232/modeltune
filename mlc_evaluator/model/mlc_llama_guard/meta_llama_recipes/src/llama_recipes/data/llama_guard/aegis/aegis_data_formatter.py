@@ -215,9 +215,11 @@ if __name__ == "__main__":
     base_name, ext = base_filename.split(".json")
 
     # File to write Llama Guard training ready data
+    output_dir_name = "./data/llama_guard_training_data"
+    os.makedirs(output_dir_name, exist_ok=True)
     timestr = time.strftime("%Y%m%d-%H%M%S")
     output_file_name = os.path.join(
-        "./data/llama_guard_training_data",
+        output_dir_name,
         f"{base_name}_aegis_training_data_{timestr}.json",
     )
     formatted_ex_file = open(output_file_name, "w")
