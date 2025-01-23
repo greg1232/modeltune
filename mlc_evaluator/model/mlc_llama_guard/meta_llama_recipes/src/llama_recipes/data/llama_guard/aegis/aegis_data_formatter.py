@@ -57,6 +57,10 @@ class AegisDataFormatter(MLCDatasetsFormatterBase):
         """Pass the name of the column/field for the text/conversation."""
         self.conversation_column_name = column_name
 
+    def set_model_backbone(self, model_backbone):
+        """Pass the model backbone name for appropiate formatting"""
+        self.model_backbone = model_backbone
+
     def get_training_examples(self, file_path):
         """Extract training examples with proper labels and category codes."""
         assert file_path, "Invalid filepath"
@@ -181,6 +185,13 @@ if __name__ == "__main__":
         type=str,
         help="Column name for text/conversation.",
     )
+    parser.add_argument(
+        "--model_backbone",
+        required=False,
+        type=str,
+        default="llamaguard2",
+        help="Model backbone for finetuning.",
+    )
     args = parser.parse_args()
 
     assert args.file_path, "invalid file path"
@@ -189,6 +200,7 @@ if __name__ == "__main__":
 
     aegis_formatter.set_annotation_column_name(args.label_column)
     aegis_formatter.set_conversation_column_name(args.text_column)
+    aegis_formatter.set_model_backbone(args.model_backbone)
     training_examples, training_examples_serialized = (
         aegis_formatter.get_training_examples(args.file_path)
     )
