@@ -203,7 +203,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model_backbone",
-        required=True,
+        required=False,
         type=str,
         default="llamaguard2",
         help="Model backbone for finetuning.",
