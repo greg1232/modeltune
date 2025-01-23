@@ -187,9 +187,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model_backbone",
-        required=False,
+        required=True,
         type=str,
-        default="llamaguard2",
+        choices=["llamaguard2", "llamaguard3"],
         help="Model backbone for finetuning.",
     )
     args = parser.parse_args()
