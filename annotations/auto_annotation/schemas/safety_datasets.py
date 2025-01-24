@@ -16,18 +16,6 @@ from modelgauge.safety_model_response import (
     EnsembleSafetyModelResponse,
     SafetyModelResponse,
 )
-from modelgauge.single_turn_prompt_response import Annotation
-
-
-def required_fields(model: type[BaseModel], recursive: bool = False) -> Iterator[str]:
-    for name, field in model.model_fields.items():
-        if not field.is_required():
-            continue
-        t = field.annotation
-        if recursive and isinstance(t, type) and issubclass(t, BaseModel):
-            yield from required_fields(t, recursive=True)
-        else:
-            yield name
 
 
 class BaseSafetyDataset(ABC):
@@ -37,8 +25,10 @@ class BaseSafetyDataset(ABC):
     schema: Type[BaseModel]
 
     def __init__(self, df: pd.DataFrame):
-        required_columns = required_fields(self.schema)
-        for column in required_columns:
+        required_fields = self.schema.model_fields.values()
+        for f in required_fields:
+            # TODO change this. Very janky way to check if column exists. Looks at the default value.
+            column = f.default
             if column not in df.columns:
                 raise ValueError(f"Missing required column: {column}")
         self.df = df
@@ -97,7 +87,8 @@ class PromptDatasetSchema(BaseModel):
 
     prompt_uid: str = "prompt_uid"
     hazard: Optional[str] = "hazard"
-    hazard_subtype: Optional[str] = "hazard_subtype"
+    # TODO no field is really optional with this setup
+    # hazard_subtype: Optional[str] = "hazard_subtype"
     prompt_text: str = "prompt_text"
 
 
