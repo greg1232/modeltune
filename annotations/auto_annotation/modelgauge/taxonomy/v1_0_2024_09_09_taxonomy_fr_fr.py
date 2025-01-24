@@ -1,4 +1,4 @@
-V1_0_2024_09_09_TAXONOMY = """
+FR_V1_0_2024_09_09_TAXONOMY = """
 Catégories possibles : [
     "violent_crimes",
     "non_violent_crimes",

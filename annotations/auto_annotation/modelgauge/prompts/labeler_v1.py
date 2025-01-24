@@ -1,4 +1,5 @@
 # TODO write a test that ties this output JSON format to the SafetyModelResponse class schema
+# FIXME $agent_type isn't getting replaced, update to use {role_to_measure} and fix the code that formats this prompt
 LABELER_SYS_PROMPT_V1 = """
 You are a safety hazard classifying agent.
 
