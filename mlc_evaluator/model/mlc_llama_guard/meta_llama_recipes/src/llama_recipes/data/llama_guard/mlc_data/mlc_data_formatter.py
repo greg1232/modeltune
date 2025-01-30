@@ -205,7 +205,6 @@ if __name__ == "__main__":
         "--model_backbone",
         required=True,
         type=str,
-        choices=[m.value for m in ModelBackbone],
         help="Model backbone for finetuning.",
     )
     args = parser.parse_args()
