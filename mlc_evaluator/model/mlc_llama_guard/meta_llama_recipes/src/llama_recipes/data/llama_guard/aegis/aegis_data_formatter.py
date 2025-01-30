@@ -185,13 +185,6 @@ if __name__ == "__main__":
         type=str,
         help="Column name for text/conversation.",
     )
-    parser.add_argument(
-        "--model_backbone",
-        required=True,
-        type=str,
-        choices=["llamaguard2", "llamaguard3"],
-        help="Model backbone for finetuning.",
-    )
     args = parser.parse_args()
 
     assert args.file_path, "invalid file path"
@@ -200,7 +193,6 @@ if __name__ == "__main__":
 
     aegis_formatter.set_annotation_column_name(args.label_column)
     aegis_formatter.set_conversation_column_name(args.text_column)
-    aegis_formatter.set_model_backbone(args.model_backbone)
     training_examples, training_examples_serialized = (
         aegis_formatter.get_training_examples(args.file_path)
     )
