@@ -1,0 +1,10 @@
+name: modeltune
+help: modeltune CLI
+version: 0.1.0
+
+
+commands:
+
+- name: build-image
+  help: Build image from dockerfile
+
