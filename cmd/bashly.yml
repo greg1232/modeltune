@@ -8,3 +8,6 @@ commands:
 - name: build-image
   help: Build image from dockerfile
 
+- name: sut-inference
+  help: Run inference on SUT (System Under Test)
+
