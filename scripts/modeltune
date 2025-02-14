@@ -26,7 +26,8 @@ modeltune_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "Commands:"
-  printf "  %s   Build image from dockerfile\n" "build-image"
+  printf "  %s   Build image from dockerfile\n" "build-image  "
+  printf "  %s   Run inference on SUT (System Under Test)\n" "sut-inference"
   echo
 
   # :command.long_usage
@@ -51,6 +52,27 @@ modeltune_build_image_usage() {
   printf "%s\n" "Usage:"
   printf "  modeltune build-image\n"
   printf "  modeltune build-image --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n "$long_usage" ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+modeltune_sut_inference_usage() {
+  printf "modeltune sut-inference - Run inference on SUT (System Under Test)\n\n"
+
+  printf "%s\n" "Usage:"
+  printf "  modeltune sut-inference\n"
+  printf "  modeltune sut-inference --help | -h\n"
   echo
 
   # :command.long_usage
@@ -176,6 +198,41 @@ modeltune_build_image_command() {
 
 }
 
+# :command.function
+modeltune_sut_inference_command() {
+
+  # cmd/sut_inference_command.sh
+
+  ./modeltune build-image
+
+  # Get the directory of this script
+  LOCAL_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+  # Get the project root directory
+  ROOT_DIRECTORY=$LOCAL_DIRECTORY/..
+
+  # Make the mlruns directory
+  mkdir -p $ROOT_DIRECTORY/experiments
+
+  declare -a sut_inference_command_parts
+
+  sut_inference_command_parts=(
+      "cd /app/annotations/auto_annotation" "&&" "poetry" "run" "python3" "/app/annotations/auto_annotation/mlflow/getting_responses_from_SUTs.py" ";"
+  )
+
+  declare -a docker_command_parts
+  docker_command_parts=("docker" "run" "-v" "$ROOT_DIRECTORY/experiments:/app/experiments"
+      "--rm" "-e" "TOGETHER_API_KEY=66a281a055e089f373e542f700ed3e309f3e698b9f63b9150a304e6fba1c81fe"
+      "-e" "MLFLOW_TRACKING_URI=file:///app/experiments/mlruns" )
+
+  docker_command_parts+=("modeltune:latest" "sh" "-c" "'${sut_inference_command_parts[*]}'")
+
+  docker_command="${docker_command_parts[*]}"
+  echo $docker_command
+  eval $docker_command
+
+}
+
 # :command.parse_requirements
 parse_requirements() {
   # :command.fixed_flags_filter
@@ -210,6 +267,13 @@ parse_requirements() {
       action="build-image"
       shift
       modeltune_build_image_parse_requirements "$@"
+      shift $#
+      ;;
+
+    sut-inference)
+      action="sut-inference"
+      shift
+      modeltune_sut_inference_parse_requirements "$@"
       shift $#
       ;;
 
@@ -294,6 +358,51 @@ modeltune_build_image_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+modeltune_sut_inference_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      --help | -h)
+        long_usage=yes
+        modeltune_sut_inference_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="sut-inference"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
 # :command.initialize
 initialize() {
   declare -g version="0.1.0"
@@ -315,6 +424,7 @@ run() {
 
   case "$action" in
     "build-image") modeltune_build_image_command ;;
+    "sut-inference") modeltune_sut_inference_command ;;
   esac
 }
 
